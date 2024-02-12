@@ -57,22 +57,23 @@ if len(speech) > 100:  # Change 10 to your desired number of characters
     # Write the updated DataFrame back to the CSV file
     df.to_csv(filename, index=False)
 else:
-    new_data2 = {'Timestamp': [current_time], 'Python': [speech]}
-    df_new2 = pd.DataFrame(new_data2)
-    df = pd.concat([df, df_new2], ignore_index=True)
-    # Write the updated DataFrame back to the CSV file
-    df.to_csv(filename, index=False)
+    if "delete" in speech.lower():  # Case-insensitive check
+        print("Detected 'delete' in speech. Perform deletion logic here.")
+        
+    else:
+        new_data2 = {'Timestamp': [current_time], 'Python': [speech]}
+        df_new2 = pd.DataFrame(new_data2)
+        df = pd.concat([df, df_new2], ignore_index=True)
+        # Write the updated DataFrame back to the CSV file
+        df.to_csv(filename, index=False)
 
 
     
 
 
 
-
-
-
-print(speech)
-print(f"Current Time: {current_time}")
+    print(speech)
+    print(f"Current Time: {current_time}")
 
 
 
