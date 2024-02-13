@@ -1,6 +1,6 @@
 import speech_recognition as sr
 import time
-# import winsound
+import winsound
 from datetime import datetime
 import pandas as pd
 
@@ -26,10 +26,10 @@ def delete_last_entry(df):
 
 def calculate_task_duration(df):
     # Check if there is at least one 'start task' entry
-    start_task_entries = df[df['Python'].str.contains('start task', na=False, case=False)]
+    start_task_entries = df[df['task'].str.contains('start task', na=False, case=False)]
     if not start_task_entries.empty:
         # Get the timestamp of the last 'start task' entry
-        last_start_task_time = pd.to_datetime(start_task_entries['Timestamp'].iloc[-1])
+        last_start_task_time = pd.to_datetime(start_task_entries['time'].iloc[-1])
 
         # Get the current time
         current_time = datetime.now()
@@ -42,10 +42,10 @@ def calculate_task_duration(df):
 
 def record_speech():
     mic = sr.Microphone()
-
+    winsound.Beep(1000, 500)
     with mic as source:
         audio = r.listen(source)
-
+    winsound.Beep(700, 400)
     # recording session info
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     speech = r.recognize_google(audio)
@@ -65,18 +65,21 @@ def execute_task(df, speech, current_time):
         print("Deletion logic executed.")
 
     if speech.lower().startswith("start task"):
-        df = add_row(df, speech[10:], current_time)
+        df = add_row(df, speech, current_time)
 
     elif speech.lower().startswith("end task"):
         print("Task Time Counter Stopped")
-        add_row(df, "task ended", current_time)
+        df = add_row(df, "task ended", current_time)
 
         # Calculate the duration and log it
         duration_seconds = calculate_task_duration(df)
         if duration_seconds is not None:
             print(f"Task duration: {duration_seconds} seconds")
-
+    else:
+        df = add_row(df, speech, current_time) 
+        
     return df
+
 
 
 def write_task(df, filename):
@@ -87,10 +90,10 @@ def write_task(df, filename):
 # end a task
     
 if __name__ == "__main__":
-    df = pd.read_csv("task_log.csv")
+    df = pd.read_csv(filename)
     speech, current_time = record_speech()
     data = execute_task(df, speech, current_time)
-    write_task(data, "task_log.csv")
+    write_task(data, filename)
 
 print(speech)
 print(f"Current Time: {current_time}")
