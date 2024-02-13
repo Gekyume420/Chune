@@ -8,8 +8,6 @@ r = sr.Recognizer()
 
 filename = '2-12-24.csv'
 
-
-
 def delete_last_entry(df, filename):
     if not df.empty:
         df = df[:-1]  # Remove the last row
@@ -34,12 +32,12 @@ def calculate_task_duration(df):
 
     return None
 
-
 df = pd.read_csv(filename)
 
 mic = sr.Microphone()
 
-total_task_time = int()
+total_task_time_column = 'Task Time'
+total_task_time = 0.0
 
 # you are good to record beep
 winsound.Beep(1000, 500)
@@ -58,22 +56,21 @@ if speech == 'delete last row':
     delete_last_entry(df, filename)
     print("Deletion logic executed.")
 
-
-
 elif 'end task' in speech.lower():
     print("Task Time Counter Stopped")
     speech = speech.lower()
     new_data2 = {'Timestamp': [current_time], 'Python': [speech]}
     df_new2 = pd.DataFrame(new_data2)
     df = pd.concat([df, df_new2], ignore_index=True)
-    df.to_csv(filename, index=False)
 
     # Calculate the duration and log it
     duration_seconds = calculate_task_duration(df)
     if duration_seconds is not None:
-        
         print(f"Task duration: {duration_seconds} seconds")
-        total_task_time = total_task_time + duration_seconds
+        total_task_time += duration_seconds
+
+    # Update 'Task Time' column in the DataFrame
+    df.at[df.index[-1], total_task_time_column] = total_task_time
 
 else:
     # Check if the length of speech is greater than 100 characters
@@ -98,8 +95,9 @@ else:
     # Write the updated DataFrame back to the CSV file
     df.to_csv(filename, index=False)
 
+    # Update 'Task Time' column in the DataFrame
+    df.at[df.index[-1], total_task_time_column] = total_task_time
+
 print(speech)
 print(f"Current Time: {current_time}")
-print(total_task_time)
-
-
+print(f"Total Task Time: {total_task_time} seconds")
