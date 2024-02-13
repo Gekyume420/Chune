@@ -16,11 +16,11 @@ def format_sentence(sentence, words_per_line=10):
             formatted_sentence.append("\n")
     return " ".join(formatted_sentence)
 
-def delete_last_entry(df, filename):
+def delete_last_entry(df):
     if not df.empty:
         df = df[:-1]  # Remove the last row
-        df.to_csv(filename, index=False)
         print("Last entry deleted from the CSV file.")
+        return df
     else:
         print("CSV file is empty. No entries to delete.")
 
@@ -61,11 +61,11 @@ def execute_task(df, speech, current_time):
     speech = format_sentence(speech)
     # Check if the word "delete" is spoken
     if speech == 'delete last row':
-        delete_last_entry(df, filename)
+        df = delete_last_entry(df, filename)
         print("Deletion logic executed.")
 
     if speech.lower().startswith("start task"):
-        df = add_row(df, speech, current_time)
+        df = add_row(df, speech[10:], current_time)
 
     elif speech.lower().startswith("end task"):
         print("Task Time Counter Stopped")
@@ -76,8 +76,10 @@ def execute_task(df, speech, current_time):
         if duration_seconds is not None:
             print(f"Task duration: {duration_seconds} seconds")
 
+    return df
 
-def write_task(df):
+
+def write_task(df, filename):
     df.to_csv(filename, index=False)
 
 # delete last task entry
@@ -87,8 +89,8 @@ def write_task(df):
 if __name__ == "__main__":
     df = pd.read_csv("task_log.csv")
     speech, current_time = record_speech()
-    data = execute_task(speech)
-    write_task(data)
+    data = execute_task(df, speech, current_time)
+    write_task(data, "task_log.csv")
 
 print(speech)
 print(f"Current Time: {current_time}")
