@@ -4,10 +4,6 @@ import winsound
 from datetime import datetime
 import pandas as pd
 
-r = sr.Recognizer()
-
-filename = '2-12-24.csv'
-
 def format_sentence(sentence, words_per_line=10):
     formatted_sentence = []
     for i, word in enumerate(sentence.split()):
@@ -24,6 +20,8 @@ def delete_last_entry(df):
     else:
         print("CSV file is empty. No entries to delete.")
 
+    return df
+
 def calculate_task_duration(df):
     # Check if there is at least one 'start task' entry
     start_task_entries = df[df['task'].str.contains('start task', na=False, case=False)]
@@ -36,24 +34,25 @@ def calculate_task_duration(df):
 
         # Calculate the duration
         duration = current_time - last_start_task_time
-        return duration.total_seconds()
+        return int(duration.total_seconds() / 60)
 
     return None
 
 def record_speech():
+    r = sr.Recognizer()
     mic = sr.Microphone()
-    winsound.Beep(1000, 500)
+    winsound.Beep(500, 500)
     with mic as source:
         audio = r.listen(source)
-    winsound.Beep(700, 400)
+    winsound.Beep(200, 400)
     # recording session info
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     speech = r.recognize_google(audio)
 
     return speech, current_time
 
-def add_row(df, speech, current_time):
-    df2 = pd.DataFrame({'time': [current_time], 'task': [speech]})
+def add_row(df, data):
+    df2 = pd.DataFrame(data)
     df = pd.concat([df, df2], ignore_index=True)
     return df
 
@@ -61,22 +60,24 @@ def execute_task(df, speech, current_time):
     speech = format_sentence(speech)
     # Check if the word "delete" is spoken
     if speech == 'delete last row':
-        df = delete_last_entry(df, filename)
+        df = delete_last_entry(df)
         print("Deletion logic executed.")
 
     if speech.lower().startswith("start task"):
-        df = add_row(df, speech, current_time)
+        df = add_row(df, {'time': [current_time], 'task': [speech]})
 
     elif speech.lower().startswith("end task"):
         print("Task Time Counter Stopped")
-        df = add_row(df, "task ended", current_time)
+        
 
         # Calculate the duration and log it
-        duration_seconds = calculate_task_duration(df)
-        if duration_seconds is not None:
-            print(f"Task duration: {duration_seconds} seconds")
+        duration_minutes = calculate_task_duration(df)
+        if duration_minutes is not None:
+            print(f"Task duration: {duration_minutes} mins")
+        df = add_row(df, {'points': [duration_minutes], 'time': [current_time], 'task': [speech]})
+        print(df)
     else:
-        df = add_row(df, speech, current_time) 
+        df = add_row(df, {'time': [current_time], 'task': [speech]}) 
         
     return df
 
@@ -90,6 +91,7 @@ def write_task(df, filename):
 # end a task
     
 if __name__ == "__main__":
+    filename = 'task_log.csv'
     df = pd.read_csv(filename)
     speech, current_time = record_speech()
     data = execute_task(df, speech, current_time)
