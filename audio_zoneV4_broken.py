@@ -39,7 +39,7 @@ df = pd.read_csv(filename)
 
 mic = sr.Microphone()
 
-total_task_time = int[]
+total_task_time = int()
 
 # you are good to record beep
 winsound.Beep(1000, 500)
