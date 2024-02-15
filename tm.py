@@ -38,13 +38,30 @@ def calculate_task_duration(df):
 
     return None
 
+def calculate_DCR_duration(df):
+    # Check if there is at least one 'start task' entry
+    start_DCR_entries = df[df['DCR'].str.contains('begin DCR', na=False, case=False)]
+    if not start_DCR_entries.empty:
+        print("You're being a pussy")
+        # Get the timestamp of the last 'start task' entry
+        last_DCR_task_time = pd.to_datetime(start_DCR_entries['DCR'].iloc[-1])
+
+        # Get the current time
+        current_time = datetime.now()
+
+        # Calculate the duration
+        duration = current_time - last_DCR_task_time
+        return int(duration.total_seconds() / 60)
+
+    return None
+
 def record_speech():
     r = sr.Recognizer()
     mic = sr.Microphone()
-    winsound.Beep(500, 500)
+    winsound.Beep(1000, 500)
     with mic as source:
         audio = r.listen(source)
-    winsound.Beep(200, 400)
+    winsound.Beep(700, 400)
     # recording session info
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     speech = r.recognize_google(audio)
@@ -65,6 +82,17 @@ def execute_task(df, speech, current_time):
 
     if speech.lower().startswith("start task"):
         df = add_row(df, {'time': [current_time], 'task': [speech]})
+
+    elif speech.lower().startswith("end DCR"):
+        print("DCR Time Counter Stopped")
+        
+
+        # Calculate the duration and log it
+        duration_minutes = calculate_DCR_duration(df)
+        if duration_minutes is not None:
+            print(f"DCR duration: {duration_minutes} mins")
+        df = add_row(df, {'DCR': [duration_minutes], 'time': [current_time], 'task': [speech]})
+        print(df)
 
     elif speech.lower().startswith("end task"):
         print("Task Time Counter Stopped")
