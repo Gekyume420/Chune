@@ -127,7 +127,7 @@ def write_task(df, filename):
 
 
 if __name__ == "__main__":
-    filename = 'task_log.csv'
+    filename = '2-15-24.csv'
     df = pd.read_csv(filename)
     speech, current_time = record_speech()
     data = execute_task(df, speech, current_time)
@@ -172,7 +172,5 @@ Commands:
 **BEEP FEEDBACK**
 A different beep, apart for the beeps that let you know when you are recording,  
 will play to let you know your command has been accepted
-
-
 
 """
