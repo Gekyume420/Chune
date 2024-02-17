@@ -12,7 +12,8 @@ cred = credentials.Certificate('C:/Users/16198/Desktop/FIREBASE/chunelink-fireba
 firebase_admin.initialize_app(cred, {'databaseURL': 'https://chunelink-default-rtdb.firebaseio.com/'})
 
 # Static unique identifier
-COMPUTER_ID = "Jackson"  # Change this to "id_nicks_computer" on Nick's computer
+COMPUTER_ID2 = "Jackson"  
+COMPUTER_ID = "Nick" # Change this to "id_nicks_computer" on Nick's computer
 
 
 """
@@ -22,7 +23,7 @@ COMPUTER_ID = "Jackson"  # Change this to "id_nicks_computer" on Nick's computer
 
 def add_row_firebase(data):
     # Reference to your Firebase database path
-    ref = db.reference(f'/tasks/{COMPUTER_ID}')
+    ref = db.reference(f'/tasks/{COMPUTER_ID2}')
     #ref = db.reference('/tasks')
     # Pushes a new entry onto the database
     ref.push(data)
@@ -35,26 +36,55 @@ def execute_task_firebase(df, speech, current_time):
     # Depending on the condition, you might want to add more to `data`
     add_row_firebase(data)
 
-"""
+
 
 #This function will print out new tasks as they're added to the database. You can adapt it to merge new entries into your local CSV file or take any other action needed.
-def listen_for_changes():
+def listen_for_nick_changes():
     # Listen for changes only in the specific computer's data
     ref = db.reference(f'/tasks/{COMPUTER_ID}')
     
     def listener(event):
         print(f'New task added by {COMPUTER_ID}:', event.data)
-    
+        process_and_update_csv(event.data)
     ref.listen(listener)
-
+"""
 import uuid # <------ this is for using the actual computer name
 
 # Dynamic unique identifier based on MAC address
 COMPUTER_ID = uuid.UUID(int=uuid.getnode()).hex[-12:]
 
-    
-
 """
+def process_and_update_csv(nicks_data):
+    # Load the existing CSV file
+    df = pd.read_csv('2-15-24.csv')
+    
+    # Ensure the DataFrame has all necessary columns, even if some might be specific to your data
+    required_columns = ['nick time', 'nick task']  # Add other required columns as needed
+    for column in required_columns:
+        if column not in df.columns:
+            df[column] = None  # Initialize missing columns with None or an appropriate default value
+
+    # Check if there's any incoming data
+    if nicks_data:
+        for key, nicks_data_item in nicks_data.items():
+            # Prepare a new row with default values for all columns
+            new_row = {column: None for column in df.columns}  # Initialize all columns to default
+            
+            # Update the new row with Nick's data
+            new_row.update({
+                'nick time': nicks_data_item.get('time', ''),
+                'nick task': nicks_data_item.get('task', '')
+            })
+
+            df2 = pd.DataFrame([new_row])  # Create a new DataFrame with the new row
+            df = pd.concat([df, df2], ignore_index=True)
+        
+        # Save the updated DataFrame back to the CSV
+        df.to_csv('2-15-24.csv', index=False)
+        print("Nick's data added to CSV.")
+    else:
+        print("No new data from Nick to add.")
+
 
 """
             Firebase commands [Above]
@@ -191,6 +221,19 @@ if __name__ == "__main__":
     speech, current_time = record_speech()
     data = execute_task(df, speech, current_time)
     write_task(data, filename)
+
+    # Start listening for changes from Nick
+    listen_for_nick_changes()
+    
+
+    
+    # Keep the script running to maintain the listener
+    import time
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Stopped listening for changes.")
 
 if speech == 'delete last row':
         df = delete_last_entry(df)
