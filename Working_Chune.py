@@ -2,19 +2,27 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 import speech_recognition as sr
-import time
-import winsound
 from datetime import datetime, timedelta
 import pandas as pd
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# fix for mac
+try:
+    import winsound
+except:
+    pass
+
 # Path to your Firebase Admin SDK private key
-cred = credentials.Certificate('C:/Users/16198/Desktop/FIREBASE/chunelink-firebase-adminsdk-unh7l-267bbbcfac.json')
+cred = credentials.Certificate(os.getcwd() + '/chunelink-firebase-adminsdk-unh7l-267bbbcfac.json')
 # Initialize the app with a service account, granting admin privileges
 firebase_admin.initialize_app(cred, {'databaseURL': 'https://chunelink-default-rtdb.firebaseio.com/'})
 
 # Static unique identifier
  
-COMPUTER_ID = "Nick" # Change this to "id_nicks_computer" on Nick's computer
-COMPUTER_ID2 = "Jackson" 
+COMPUTER_ID = os.environ['COMPUTER_ID']
 filename = "2-22-FIREBASE.csv"
 
 """
@@ -24,7 +32,7 @@ filename = "2-22-FIREBASE.csv"
 
 def add_row_firebase(data):
     # Reference to your Firebase database path
-    ref = db.reference(f'/tasks/{COMPUTER_ID2}')
+    ref = db.reference(f'/tasks/{COMPUTER_ID}')
     #ref = db.reference('/tasks')
     # Pushes a new entry onto the database
     ref.push(data)
@@ -40,7 +48,6 @@ def execute_task_firebase(df, speech, current_time):
 
 
 ref = db.reference(f'/tasks/{COMPUTER_ID}')
-ref2 = db.reference(f'/tasks/{COMPUTER_ID2}')
 
 
 #print(ref)
@@ -141,12 +148,15 @@ def calculate_time_since_last_start_DCR(computer_id):
 def record_speech():
     r = sr.Recognizer()
     mic = sr.Microphone()
-    winsound.Beep(1000, 500)
+    if os.name == 'nt':
+        winsound.Beep(1000, 500)
     print("\n\n [ Recording in progress ] \n\n")
     
     with mic as source:
         audio = r.listen(source)
-    winsound.Beep(700, 400)
+    
+    if os.name == 'nt':
+        winsound.Beep(700, 400)
     current_time = datetime.now().strftime("%H:%M:%S")
     speech = r.recognize_google(audio)
     return speech, current_time
@@ -257,28 +267,29 @@ speech, current_time = record_speech()
 # AWIUFNAIUWPFPAW---------------------------------------------NEXT: YOU NEED TO PUT IN ALL OF THE SPEECH COMMANDS ------------------------------
 if speech.lower().startswith("start task"):
     print("Task Timer Started")
-    winsound.Beep(1200, 400)
+    if os.name == 'nt':
+        winsound.Beep(1200, 400)
 if speech.lower().startswith("start dcr"):
-    winsound.Beep(5000, 100)
+    if os.name == 'nt':
+        winsound.Beep(5000, 100)
 if speech.lower().startswith("stop task") or speech.lower().startswith("end task"):
     print("Task Time Counter Stopped")
-    computer_id = COMPUTER_ID2  # Use the actual computer_id
-    time_diff = calculate_time_since_last_start_task(computer_id)
-    execute_task_firebase_task_time('Jackson', speech, current_time,time_diff)
+    time_diff = calculate_time_since_last_start_task(COMPUTER_ID)
+    execute_task_firebase_task_time(COMPUTER_ID, speech, current_time,time_diff)
     if time_diff:
         print(f"Time since last 'start task': {time_diff}")
     
 if speech.lower().startswith("stop dcr") or speech.lower().startswith("end dcr"):
     print("Task Time Counter Stopped")
-    computer_id = COMPUTER_ID2  # Use the actual computer_id
-    time_diff = calculate_time_since_last_start_task(computer_id)
-    execute_task_firebase_DCR_time('Jackson', speech, current_time,time_diff)
+
+    time_diff = calculate_time_since_last_start_task(COMPUTER_ID)
+    execute_task_firebase_DCR_time(COMPUTER_ID, speech, current_time,time_diff)
     if time_diff:
         print(f"Time since last 'start DCR': {time_diff}")
     
 
 if  speech.lower != speech.lower().startswith("stop tasks"):
-        update_task_in_database('Jackson', speech, current_time)
+        update_task_in_database(COMPUTER_ID, speech, current_time)
 
 
 # Update the task in the Firebase database for the appropriate computer ID
