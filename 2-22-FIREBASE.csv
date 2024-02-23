@@ -1,15 +1,11 @@
-task,time,id,points
-start Task,17:27:47,-NrIZqUf_txWx1zPaZXR,
-eating a uncrustable,17:28:04,-NrIZulb4MXR36e-P-gy,
-oh my God it's over,17:31:55,-NrI_n1ynzJBsVEYtR6e,
-end task,17:35:07,-NrIaWiMiQeJTdzTPBfI,7.0
-end task,17:35:07,-NrIaWlZNqoRxeWzu7Aq,
-start DCR,17:35:17,-NrIaZIqN9ZIbWsqh7z6,
-is this going to work,17:38:20,-NrIbG2gVSH-7I2LaAsp,
-eating another uncrustable,17:40:05,-NrIbebeo4QTzCQzDcBN,
-maybe there should be a rule where I can't snort while watching YouTube,17:55:06,-NrIf6nx9qjfbDrfCz9y,
-50 mg,17:59:28,-NrIg5i9ubGm3DaHKWzb,
-50 mg,18:39:47,-NrIpJys654i1P5yTZtD,
-55 mg,18:58:05,-NrItWCGWBeJSyM_Dmbz,
-that broccoli cheddar soup really slowed me down,18:58:23,-NrIt_fUps9uVrWL2l-S,
-60 mg,19:08:12,-NrIvpJJEzBNWpAeOOub,
+Index,task,time,id,points,DCR time,task2,time2,id2,points2,DCR time2
+0,end task,00:04:16,-NrJzaPAZJ_RHZFDEv4Q,,,I partially fix the code to account for Nick,00:22:40,-NrK2nuoImGMKlH_82aB,,
+1,end task,00:04:16,-NrJzaSggukyA56hzmqG,,,start Task being gay,00:26:25,-NrK3etJM4VHojg-efm4,,
+2,testing 1 2 3,00:19:03,-NrK1yfIZVL4KF4XlOsH,,,start Task sucking cock,00:27:09,-NrK3pekOhZxUcwev3W7,,
+3,Nick get on TS,00:19:45,-NrK285mQh01VGYXp-wP,,,does she go in the nick folder,00:32:10,-NrK4z-zhntj8-F-j61K,,
+4,my phone died,00:19:59,-NrK2BRuKANlaSf1VUzB,,,,,,,
+5,start Task jerking off,00:20:29,-NrK2J-O-qFkPDxIWB0_,,,,,,,
+6,look I'm Nick,00:21:10,-NrK2Sk4ASQoJVeziZq1,,,,,,,
+7,that didn't work,00:21:27,-NrK2X1RPd-2WDaDlB1V,,,,,,,
+8,this should go in Jackson's folder,00:32:53,-NrK58PRFX7mcqlFd5Li,,,,,,,
+Total,,,,0,0,,,,0,0

@@ -5,9 +5,13 @@ import speech_recognition as sr
 from datetime import datetime, timedelta
 import pandas as pd
 import os
-from dotenv import load_dotenv
+import uuid # <------ this is for using the actual computer name
 
-load_dotenv()
+# Dynamic unique identifier based on MAC address
+COMPUTER_ID = uuid.UUID(int=uuid.getnode()).hex[-12:]
+#from dotenv import load_dotenv
+
+#load_dotenv()
 
 # fix for mac
 try:
@@ -16,14 +20,14 @@ except:
     pass
 
 # Path to your Firebase Admin SDK private key
-cred = credentials.Certificate(os.getcwd() + '/chunelink-firebase-adminsdk-unh7l-267bbbcfac.json')
+cred = credentials.Certificate('C:/Users/16198/Desktop/FIREBASE/chunelink-firebase-adminsdk-unh7l-267bbbcfac.json')
 # Initialize the app with a service account, granting admin privileges
 firebase_admin.initialize_app(cred, {'databaseURL': 'https://chunelink-default-rtdb.firebaseio.com/'})
 
 # Static unique identifier
  
-COMPUTER_ID = os.environ['COMPUTER_ID']
-filename = "2-22-FIREBASE.csv"
+
+filename = "2-23-24.csv"
 
 """
             Firebase commands [Below]
@@ -296,7 +300,7 @@ if  speech.lower != speech.lower().startswith("stop tasks"):
 
 
 # Then, fetch all data including the new entry and write it to the CSV file
-fetch_data_and_write_to_csv('Jackson', 'Nick')
+fetch_data_and_write_to_csv('2cf05d760155', 'Nick')
 
 print('\n\n', speech, '\n\n')
 print(f"Current Time: {current_time}")

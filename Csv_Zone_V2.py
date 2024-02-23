@@ -17,7 +17,7 @@ firebase_admin.initialize_app(cred, {'databaseURL': 'https://chunelink-default-r
 COMPUTER_ID = "Nick" # Change this to "id_nicks_computer" on Nick's computer
 COMPUTER_ID2 = "Jackson" 
 
-filename = '2-22-FIREBASE.csv'
+filename = '2-21-24.csv'
 
 
 def add_row_firebase(data):
@@ -177,7 +177,7 @@ def update_task_in_database(computer_id, task, time, time_difference):
             'time': time,
             'task time': time_difference_str  # Use the string representation
         })
-
+ 
 # First, record a speech and get the current time
 speech, current_time = record_speech()
 
