@@ -1,3 +1,4 @@
+beepy==1.0.7
 CacheControl==0.14.0
 cachetools==5.3.2
 certifi==2024.2.2
@@ -37,6 +38,7 @@ python-dotenv==1.0.1
 pytz==2024.1
 requests==2.31.0
 rsa==4.9
+simpleaudio==1.0.4
 six==1.16.0
 SpeechRecognition==3.10.1
 typing_extensions==4.9.0
