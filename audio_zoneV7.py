@@ -121,13 +121,10 @@ def execute_task(df, speech, current_time):
 def write_task(df, filename):
     df.to_csv(filename, index=False)
 
-# delete last task entry
-# start a task
-# end a task
 
 
 if __name__ == "__main__":
-    filename = '2-15-24.csv'
+    filename = '2-22-24.csv'
     df = pd.read_csv(filename)
     speech, current_time = record_speech()
     data = execute_task(df, speech, current_time)

@@ -166,19 +166,15 @@ def execute_task(df, speech, current_time):
     # Check if the word "delete" is spoken
     
     if speech.lower().startswith("start task"):
-        #df = add_row(df, {'time': [current_time], 'task': [speech]})
         print("Task Timer Started")
         winsound.Beep(1200, 400)
     if speech.lower().startswith("start dcr"):
-        #df = add_row(df, {'time': [current_time], 'task': [speech]})
-        winsound.Beep(5000, 5000)
+       winsound.Beep(5000, 1000)
     
 
     if speech.lower().startswith("end dcr"):
         print("DCR Time Counter Stopped")
-        
-
-        # Calculate the duration and log it
+       # Calculate the duration and log it
         duration_minutes = calculate_DCR_duration(df)
         if duration_minutes is not None:
             print(f"DCR duration: {duration_minutes} mins")

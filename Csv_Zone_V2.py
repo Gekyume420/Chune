@@ -17,12 +17,8 @@ firebase_admin.initialize_app(cred, {'databaseURL': 'https://chunelink-default-r
 COMPUTER_ID = "Nick" # Change this to "id_nicks_computer" on Nick's computer
 COMPUTER_ID2 = "Jackson" 
 
-filename = '2-21-24.csv'
+filename = '2-22-FIREBASE.csv'
 
-"""
-            Firebase commands [Below]
-
-"""
 
 def add_row_firebase(data):
     # Reference to your Firebase database path
@@ -158,18 +154,29 @@ def update_task_in_database(computer_id, task, time, time_difference):
     # Convert the timedelta to a string if it's not None
     if isinstance(time_difference, timedelta):
         time_difference_str = str(time_difference)
+       # time_difference_str = time_difference.strftime("%Y-%m-%d")
+        print('if statement')
+         # Create a new task entry
+        new_task_ref = ref.push()
+        
+        # Set the task and time values in the database
+        new_task_ref.set({
+            'task': task,
+            'time': time,
+            'task time': time_difference_str  # Use the string representation
+        })
     else:
-        time_difference_str = time_difference
-    
-    # Create a new task entry
-    new_task_ref = ref.push()
-    
-    # Set the task and time values in the database
-    new_task_ref.set({
-        'task': task,
-        'time': time,
-        'task time': time_difference_str  # Use the string representation
-    })
+        
+        time_difference_str = '0'
+        # Create a new task entry
+        new_task_ref = ref.push()
+        
+        # Set the task and time values in the database
+        new_task_ref.set({
+            'task': task,
+            'time': time,
+            'task time': time_difference_str  # Use the string representation
+        })
 
 # First, record a speech and get the current time
 speech, current_time = record_speech()
@@ -193,9 +200,7 @@ if speech.lower().startswith("end task"):
 
 
 
-
-# Update the task in the Firebase database for the appropriate computer ID
-update_task_in_database('Jackson', speech, current_time, time_difference)
+update_task_in_database('Jackson', speech, current_time, 'task time')
 
 # Then, fetch all data including the new entry and write it to the CSV file
 fetch_data_and_write_to_csv('Jackson', 'Nick')

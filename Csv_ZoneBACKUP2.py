@@ -5,7 +5,6 @@ import speech_recognition as sr
 import time
 import winsound
 from datetime import datetime
-from datetime import datetime, timedelta
 import pandas as pd
 # Path to your Firebase Admin SDK private key
 cred = credentials.Certificate('C:/Users/16198/Desktop/FIREBASE/chunelink-firebase-adminsdk-unh7l-267bbbcfac.json')
@@ -16,8 +15,7 @@ firebase_admin.initialize_app(cred, {'databaseURL': 'https://chunelink-default-r
  
 COMPUTER_ID = "Nick" # Change this to "id_nicks_computer" on Nick's computer
 COMPUTER_ID2 = "Jackson" 
-
-filename = '2-21-24.csv'
+filename = "2-22-FIREBASE.csv"
 
 """
             Firebase commands [Below]
@@ -31,11 +29,11 @@ def add_row_firebase(data):
     # Pushes a new entry onto the database
     ref.push(data)
 
-def execute_task_firebase(df,time_difference, speech, current_time):
+def execute_task_firebase(df, speech, current_time):
     # Your existing logic here
    
     # Instead of adding to a local DataFrame, push to Firebase
-    data = {'time': current_time, 'task': speech, 'task time': time_difference}
+    data = {'time': current_time, 'task': speech}
     # Depending on the condition, you might want to add more to `data`
     add_row_firebase(data)
 
@@ -47,46 +45,11 @@ ref2 = db.reference(f'/tasks/{COMPUTER_ID2}')
 
 #print(ref)
 #print(ref2)
-#######################################################################################################################################
+################################
 #computer_id = "Jackson"
 
-def get_time_difference_from_last_start_task(computer_id):
-    todays_date = datetime.now().strftime("%Y-%m-%d")
-    
-    # Reference to the tasks of the specific computer ID within the database, under today's date
-    ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
-    
-    tasks = ref.get()
-    
-    if not tasks:
-        return "No tasks found."
-    
-    latest_start_task_time = None
-    
-    # Get the current date to use for parsing task times
-    current_date = datetime.now().date()
-    
-    for task_id, task_info in tasks.items():
-        # Ensure task_info is a dictionary before accessing it
-        if isinstance(task_info, dict) and 'start task' in task_info.get('task', '').lower():
-            task_time_str = task_info.get('time')
-            if task_time_str:
-                # Parse the time with the current date
-                task_time = datetime.strptime(f"{current_date} {task_time_str}", "%Y-%m-%d %H:%M:%S")
-                if latest_start_task_time is None or task_time > latest_start_task_time:
-                    latest_start_task_time = task_time
 
-    if latest_start_task_time:
-        current_time = datetime.now()
-        time_difference = current_time - latest_start_task_time
-        return time_difference - timedelta(days=time_difference.days)
-    else:
-        return "No 'start task' entries found."
-
-
-
-
-############################################################################################################################################
+#################################
 def record_speech():
     r = sr.Recognizer()
     mic = sr.Microphone()
@@ -113,64 +76,61 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2):
     data1 = ref1.get()
     data2 = ref2.get()
 
-    tasks1 = []
-    tasks2 = []
-
-    # Process data1 if it's not None and not empty
-    if data1 and isinstance(data1, dict):
+    # Check if data is not None and not empty, for both IDs
+    if data1:
+        tasks1 = []
         for key, value in data1.items():
-            if isinstance(value, dict):  # Ensure value is a dictionary
-                value['id'] = key  # Add the 'id' key to the dictionary
-                tasks1.append(value)
-            else:
-                print(f"Unexpected data format for {key} in {computer_id1}: {value}")
+            task_info = value
+            task_info['id'] = key  # Capture the unique key if you want to preserve it
+            tasks1.append(task_info)
 
-    # Process data2 similarly
-    if data2 and isinstance(data2, dict):
+        df1 = pd.DataFrame(tasks1)
+
+    else:
+        print(f"No data found or the data is empty for {computer_id1}.")
+        df1 = pd.DataFrame()
+
+    if data2:
+        tasks2 = []
         for key, value in data2.items():
-            if isinstance(value, dict):  # Ensure value is a dictionary
-                value['id2'] = key  # Add the 'id2' key to the dictionary
-                tasks2.append(value)
-            else:
-                print(f"Unexpected data format for {key} in {computer_id2}: {value}")
+            task_info = value
+            task_info['id2'] = key  # Capture the unique key if you want to preserve it
+            tasks2.append(task_info)
 
-    # Convert to DataFrame and handle empty lists
-    df1 = pd.DataFrame(tasks1) if tasks1 else pd.DataFrame()
-    df2 = pd.DataFrame(tasks2) if tasks2 else pd.DataFrame()
+        df2 = pd.DataFrame(tasks2)
 
-    # Merge the two DataFrames
-    df_merged = pd.merge(df1, df2, left_index=True, right_index=True, how='outer', suffixes=('', '2'))
+    else:
+        print(f"No data found or the data is empty for {computer_id2}.")
+        df2 = pd.DataFrame()
+
+    # Merge the two DataFrames based on index (this will align the rows to the same index)
+    df_merged = pd.merge(df1, df2, left_index=True, right_index=True, how='outer',
+                         suffixes=('', '2'))
 
     # Write the merged DataFrame to a CSV file
     df_merged.to_csv(filename, index=False)
-    print(f"Data written to '{filename}' successfully.")
-
+    print("Data written to 'test_csv.csv' successfully.")
 
 
 # Function to update task and time in the Firebase database
-def update_task_in_database(computer_id, task, time, time_difference):
+def update_task_in_database(computer_id, task, time):
     # Get today's date in the format YYYY-MM-DD
     todays_date = datetime.now().strftime("%Y-%m-%d")
     
     # Reference to the tasks of the specific computer ID within the database, under today's date
     ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
-    
-    # Convert the timedelta to a string if it's not None
-    if isinstance(time_difference, timedelta):
-        time_difference_str = str(time_difference)
-    else:
-        time_difference_str = time_difference
-    
     # Create a new task entry
     new_task_ref = ref.push()
-    
     # Set the task and time values in the database
     new_task_ref.set({
         'task': task,
-        'time': time,
-        'task time': time_difference_str  # Use the string representation
+        'time': time
     })
 
+# Function to fetch data and write it to a CSV file, this remains unchanged
+#...
+
+# Here's how you would use these functions together:
 # First, record a speech and get the current time
 speech, current_time = record_speech()
 
@@ -181,21 +141,9 @@ if speech.lower().startswith("start task"):
 if speech.lower().startswith("start dcr"):
     winsound.Beep(5000, 1000)
 
-if speech.lower().startswith("end task"):
-    print("Task Time Counter Stopped")
-    time_difference = get_time_difference_from_last_start_task('Jackson')
-    # Print only the hours, minutes, and seconds part if it's a timedelta
-    if isinstance(time_difference, timedelta):
-        print("Time difference from the last 'start task':", time_difference)
-    else:
-        print(time_difference)
-
-
-
-
 
 # Update the task in the Firebase database for the appropriate computer ID
-update_task_in_database('Jackson', speech, current_time, time_difference)
+update_task_in_database('Jackson', speech, current_time)
 
 # Then, fetch all data including the new entry and write it to the CSV file
 fetch_data_and_write_to_csv('Jackson', 'Nick')
@@ -203,12 +151,29 @@ fetch_data_and_write_to_csv('Jackson', 'Nick')
 print('\n\n', speech, '\n\n')
 print(f"Current Time: {current_time}")
 
+computer_id = COMPUTER_ID2 
+todays_date = datetime.now().strftime("%Y-%m-%d")
+ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
+
+data = ref.get()
+time_values = {}
+
+# Iterate through each task ID and its data
+for task_id, task_data in data.items():
+    # Extract the 'time' value from each task's data
+    if 'time' in task_data:
+        time_values[task_id] = task_data['time']
+
+
+print(f'Time values: {time_values}')
+
+#def get_time_difference_from_last_start_task(computer_id):
 
 
 
+"""
 
-
-
+"""
 
 
 
