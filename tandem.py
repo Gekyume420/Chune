@@ -5,8 +5,8 @@ from src.stt import STT
 import os
 import pandas as pd
 import pyfiglet
-import uuid
 from quo import echo
+import uuid
 
 load_dotenv()
 
