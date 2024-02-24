@@ -2,11 +2,10 @@ import speech_recognition as sr
 
 class STT:
     def __init__(self):
-        self.r = sr.Recognizer()
-        self.mic = sr.Microphone()
+        self._r = sr.Recognizer()
+        self._mic = sr.Microphone()
 
     def recognize(self):    
-        with self.mic as source:
-            audio = self.r.listen(source)
-        text = self.r.recognize_google(audio)
-        return text
+        with self._mic as source:
+            audio = self._r.listen(source)
+        return self._r.recognize_google(audio)
