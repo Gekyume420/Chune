@@ -5,6 +5,7 @@ import speech_recognition as sr
 from datetime import datetime, timedelta
 import pandas as pd
 import os
+from beepy import beep
 import uuid # <------ this is for using the actual computer name
 
 # Dynamic unique identifier based on MAC address
@@ -12,15 +13,9 @@ COMPUTER_ID = uuid.UUID(int=uuid.getnode()).hex[-12:]
 #from dotenv import load_dotenv
 
 #load_dotenv()
-
-# fix for mac
-try:
-    import winsound
-except:
-    pass
-
+# os.path.dirname(os.path.abspath(__file__))
 # Path to your Firebase Admin SDK private key
-cred = credentials.Certificate('C:/Users/16198/Desktop/FIREBASE/chunelink-firebase-adminsdk-unh7l-267bbbcfac.json')
+cred = credentials.Certificate(os.getcwd() + '/chunelink-firebase-adminsdk-unh7l-267bbbcfac.json')
 # Initialize the app with a service account, granting admin privileges
 firebase_admin.initialize_app(cred, {'databaseURL': 'https://chunelink-default-rtdb.firebaseio.com/'})
 
@@ -152,15 +147,13 @@ def calculate_time_since_last_start_DCR(computer_id):
 def record_speech():
     r = sr.Recognizer()
     mic = sr.Microphone()
-    if os.name == 'nt':
-        winsound.Beep(1000, 500)
+    beep(sound=1)
     print("\n\n [ Recording in progress ] \n\n")
     
     with mic as source:
         audio = r.listen(source)
     
-    if os.name == 'nt':
-        winsound.Beep(700, 400)
+    beep(sound=2)
     current_time = datetime.now().strftime("%H:%M:%S")
     speech = r.recognize_google(audio)
     return speech, current_time
@@ -271,11 +264,9 @@ speech, current_time = record_speech()
 # AWIUFNAIUWPFPAW---------------------------------------------NEXT: YOU NEED TO PUT IN ALL OF THE SPEECH COMMANDS ------------------------------
 if speech.lower().startswith("start task"):
     print("Task Timer Started")
-    if os.name == 'nt':
-        winsound.Beep(1200, 400)
+    beep(sound=1)
 if speech.lower().startswith("start dcr"):
-    if os.name == 'nt':
-        winsound.Beep(5000, 100)
+    beep(sound=1)
 if speech.lower().startswith("stop task") or speech.lower().startswith("end task"):
     print("Task Time Counter Stopped")
     time_diff = calculate_time_since_last_start_task(COMPUTER_ID)
@@ -300,7 +291,7 @@ if  speech.lower != speech.lower().startswith("stop tasks"):
 
 
 # Then, fetch all data including the new entry and write it to the CSV file
-fetch_data_and_write_to_csv('2cf05d760155', 'Nick')
+fetch_data_and_write_to_csv('2cf05d760155', 'f21898950b33')
 
 print('\n\n', speech, '\n\n')
 print(f"Current Time: {current_time}")
