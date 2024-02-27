@@ -9,6 +9,7 @@ import uuid # <------ this is for using the actual computer name
 
 # Dynamic unique identifier based on MAC address
 COMPUTER_ID = uuid.UUID(int=uuid.getnode()).hex[-12:]
+COMPUTER_ID2 = "f21898950b33"
 #from dotenv import load_dotenv
 
 #load_dotenv()
@@ -27,7 +28,7 @@ firebase_admin.initialize_app(cred, {'databaseURL': 'https://chunelink-default-r
 # Static unique identifier
  
 
-filename = "2-23-24.csv"
+filename = "2-26-24FIREBASE.csv"
 
 """
             Firebase commands [Below]
@@ -286,7 +287,7 @@ if speech.lower().startswith("stop task") or speech.lower().startswith("end task
 if speech.lower().startswith("stop dcr") or speech.lower().startswith("end dcr"):
     print("Task Time Counter Stopped")
 
-    time_diff = calculate_time_since_last_start_task(COMPUTER_ID)
+    time_diff = calculate_time_since_last_start_DCR(COMPUTER_ID)
     execute_task_firebase_DCR_time(COMPUTER_ID, speech, current_time,time_diff)
     if time_diff:
         print(f"Time since last 'start DCR': {time_diff}")
@@ -300,7 +301,7 @@ if  speech.lower != speech.lower().startswith("stop tasks"):
 
 
 # Then, fetch all data including the new entry and write it to the CSV file
-fetch_data_and_write_to_csv('2cf05d760155', 'Nick')
+fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2)
 
 print('\n\n', speech, '\n\n')
 print(f"Current Time: {current_time}")
