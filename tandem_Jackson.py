@@ -8,6 +8,7 @@ import pyfiglet
 from quo import echo
 import uuid
 
+
 load_dotenv()
 
 # Dynamic unique identifier based on MAC address

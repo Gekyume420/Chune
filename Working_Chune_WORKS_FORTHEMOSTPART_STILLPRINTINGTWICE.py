@@ -5,7 +5,7 @@ import speech_recognition as sr
 from datetime import datetime, timedelta
 import pandas as pd
 import os
-import uuid # <------ this is for using the actual computer name
+import uuid 
 from dotenv import load_dotenv
 import time
 import pyfiglet
@@ -20,28 +20,19 @@ filename_folder = os.environ['CSV_PATH']
 #db = DB(database_url, credentials_path)
 
 """
-        CHANGE YOUR .ENV FILE KIKE, JUST ADD SOMETHING LIKE THIS
+        CHANGE YOUR .ENV FILE, JUST ADD SOMETHING LIKE THIS
 """
         #EXAMPLE: CSV_PATH="C:\Users\16198\Documents\PYTHON\Daily Schedules
 """
-        THIS SHIT WRITES IT'S OWN .CSV FILE TO THIS LOCATION
+
 """
 
 
-
-
-#   NICK I KNOW YOU CAN ADD THIS TO THE .ENV I JUST NEED TO GET BACK TO STUDYING, couldn't get it to work with
-# todays_date. I know you can combine the strings but I'm not even going to try that rn
-                    #Jk i fixed it
-#filename = rf'C:\Users\16198\Documents\PYTHON\Daily Schedules\Day_Schedule_{todays_date}.csv'
 todays_date = datetime.now().strftime("%Y-%m-%d")
-
-
 filename = filename_folder + "\Schedule_" + todays_date + ".csv"
 
 # Path to your Firebase Admin SDK private key
 cred = credentials.Certificate(credentials_path)
-
 firebase_admin.initialize_app(cred, {'databaseURL': database_url})
 
 
@@ -61,23 +52,20 @@ def determine_computer_ids():
     
     if comp_name == 'f21898950b33':
         COMPUTER_ID = 'Nick'
-        COMPUTER_ID2 = '2cf05d760155'
-        text = COMPUTER_ID + ' is  gay'
+        COMPUTER_ID2 = 'Jackson'
+        text = COMPUTER_ID + ' is  gay  8====D'
     elif comp_name == '2cf05d760155':
         COMPUTER_ID = 'Jackson'
-        COMPUTER_ID2 = 'f21898950b33'
+        COMPUTER_ID2 = 'Nick'
         text = 'Welcome ,  King'
     return COMPUTER_ID, COMPUTER_ID2, text
-
-
 
 
 COMPUTER_ID, COMPUTER_ID2, text = determine_computer_ids()
 
 result = pyfiglet.figlet_format(text) 
 print(result) 
-time.sleep(1)
-
+#time.sleep(1)
 
 
 """
@@ -85,15 +73,12 @@ time.sleep(1)
 
 """
 
-
-
 ref = db.reference(f'/tasks/{COMPUTER_ID}')
 
 
 ################################################################################################################################################################
-#computer_id = "Jackson"
+
 def calculate_time_since_last_start_task(computer_id):
-    # Make sure Firebase has been initialized here
     
     todays_date = datetime.now().strftime("%Y-%m-%d")
     ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
@@ -329,8 +314,6 @@ if speech.lower().startswith("stop dcr") or speech.lower().startswith("end dcr")
 if  speech.lower != speech.lower().startswith("stop tasks"):
         update_task_in_database(COMPUTER_ID, speech, current_time)
 
-
-# Update the task in the Firebase database for the appropriate computer ID
 
 
 # Then, fetch all data including the new entry and write it to the CSV file
