@@ -5,7 +5,7 @@ class DB:
         creds = credentials.Certificate(credentials_path)
         initialize_app(creds, {'databaseURL': database_url})
         self.db = db
-
+"""
     def insert(self, path, data):
         ref = self.db.reference(path)
         ref.push(data)
@@ -14,3 +14,5 @@ class DB:
     def get(self, path):
         ref = self.db.reference(path)
         return ref.get()
+
+"""

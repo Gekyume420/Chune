@@ -1,4 +1,4 @@
-import firebase_admin 
+import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 import speech_recognition as sr
@@ -6,44 +6,13 @@ from datetime import datetime, timedelta
 import pandas as pd
 import os
 import uuid # <------ this is for using the actual computer name
-from dotenv import load_dotenv
-import time
-import pyfiglet
-from quo import echo
 
+# Dynamic unique identifier based on MAC address
+COMPUTER_ID = uuid.UUID(int=uuid.getnode()).hex[-12:]
+COMPUTER_ID2 = "f21898950b33"
+#from dotenv import load_dotenv
 
-load_dotenv()
-
-database_url = os.environ['DATABASE_URL']
-credentials_path = os.environ['CREDENTIALS_PATH']
-filename_folder = os.environ['CSV_PATH']
-#db = DB(database_url, credentials_path)
-
-"""
-        CHANGE YOUR .ENV FILE KIKE, JUST ADD SOMETHING LIKE THIS
-"""
-        #EXAMPLE: CSV_PATH="C:\Users\16198\Documents\PYTHON\Daily Schedules
-"""
-        THIS SHIT WRITES IT'S OWN .CSV FILE TO THIS LOCATION
-"""
-
-
-
-
-#   NICK I KNOW YOU CAN ADD THIS TO THE .ENV I JUST NEED TO GET BACK TO STUDYING, couldn't get it to work with
-# todays_date. I know you can combine the strings but I'm not even going to try that rn
-                    #Jk i fixed it
-#filename = rf'C:\Users\16198\Documents\PYTHON\Daily Schedules\Day_Schedule_{todays_date}.csv'
-todays_date = datetime.now().strftime("%Y-%m-%d")
-
-
-filename = filename_folder + "\Schedule_" + todays_date + ".csv"
-
-# Path to your Firebase Admin SDK private key
-cred = credentials.Certificate(credentials_path)
-
-firebase_admin.initialize_app(cred, {'databaseURL': database_url})
-
+#load_dotenv()
 
 # fix for mac
 try:
@@ -51,45 +20,46 @@ try:
 except:
     pass
 
-def determine_computer_ids():
-    
-    comp_name = uuid.UUID(int=uuid.getnode()).hex[-12:]
-    
-    COMPUTER_ID = None
-    COMPUTER_ID2 = None
-    text = None
-    
-    if comp_name == 'f21898950b33':
-        COMPUTER_ID = 'Nick'
-        COMPUTER_ID2 = '2cf05d760155'
-        text = COMPUTER_ID + ' is  gay'
-    elif comp_name == '2cf05d760155':
-        COMPUTER_ID = 'Jackson'
-        COMPUTER_ID2 = 'f21898950b33'
-        text = 'Welcome ,  King'
-    return COMPUTER_ID, COMPUTER_ID2, text
+# Path to your Firebase Admin SDK private key
+cred = credentials.Certificate('C:/Users/16198/Desktop/FIREBASE/chunelink-firebase-adminsdk-unh7l-267bbbcfac.json')
+# Initialize the app with a service account, granting admin privileges
+firebase_admin.initialize_app(cred, {'databaseURL': 'https://chunelink-default-rtdb.firebaseio.com/'})
 
+# Static unique identifier
+ 
+todays_date = datetime.now().strftime("%Y-%m-%d")
 
-
-
-COMPUTER_ID, COMPUTER_ID2, text = determine_computer_ids()
-
-result = pyfiglet.figlet_format(text) 
-print(result) 
-time.sleep(1)
-
+# Append today's date to the filename
+filename = rf'C:\Users\16198\Documents\PYTHON\Daily Schedules\Day_Schedule_{todays_date}.csv'
 
 
 """
-            Grab these paragraph comments so you don't have to keep fucking with them
+            Firebase commands [Below]
 
 """
+
+def add_row_firebase(data):
+    # Reference to your Firebase database path
+    ref = db.reference(f'/tasks/{COMPUTER_ID}')
+    #ref = db.reference('/tasks')
+    # Pushes a new entry onto the database
+    ref.push(data)
+
+def execute_task_firebase(df, speech, current_time):
+    # Your existing logic here
+   
+    # Instead of adding to a local DataFrame, push to Firebase
+    data = {'time': current_time, 'task': speech}
+    # Depending on the condition, you might want to add more to `data`
+    add_row_firebase(data)
 
 
 
 ref = db.reference(f'/tasks/{COMPUTER_ID}')
 
 
+#print(ref)
+#print(ref2)
 ################################################################################################################################################################
 #computer_id = "Jackson"
 def calculate_time_since_last_start_task(computer_id):
@@ -342,4 +312,57 @@ print(f"Current Time: {current_time}")
 
 
 
+"""
+computer_id = COMPUTER_ID2 
+todays_date = datetime.now().strftime("%Y-%m-%d")
+ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
 
+data = ref.get()
+time_values = {}
+
+# Iterate through each task ID and its data
+for task_id, task_data in data.items():
+    # Extract the 'time' value from each task's data
+    if 'time' in task_data:
+        time_values[task_id] = task_data['time']
+
+
+print(f'Time values: {time_values}')
+
+#def get_time_difference_from_last_start_task(computer_id):
+
+
+
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+#This function will print out new tasks as they're added to the database. You can adapt it to merge new entries into your local CSV file or take any other action needed.
+def listen_for_nick_changes():
+    # Listen for changes only in the specific computer's data
+    ref = db.reference(f'/tasks/{COMPUTER_ID}')
+    
+    def listener(event):
+        print(f'New task added by {COMPUTER_ID}:', event.data)
+        process_and_update_csv(event.data)
+    ref.listen(listener)
+
+import uuid # <------ this is for using the actual computer name
+
+# Dynamic unique identifier based on MAC address
+COMPUTER_ID = uuid.UUID(int=uuid.getnode()).hex[-12:]
+
+"""
