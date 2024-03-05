@@ -36,6 +36,7 @@ cred = credentials.Certificate(credentials_path)
 firebase_admin.initialize_app(cred, {'databaseURL': database_url})
 
 
+
 # fix for mac
 try:
     import winsound
@@ -71,6 +72,9 @@ def determine_computer_ids():
 
 COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
 
+computer_id1 = COMPUTER_ID
+path1 = (f'/main/{todays_date}/{computer_id1}/log')
+path1s = (f'/main/{todays_date}/{computer_id1}/subtask')
 #result = pyfiglet.figlet_format(text) 
 #print(result) 
 #time.sleep(1)
@@ -124,15 +128,15 @@ for input_str in inputs:
 
 """
 
-def calculate_time_since_last_start(computer_id, task_keyword):
+def calculate_time_since_last_start(computer_id1, task_keyword):
     # Make sure Firebase has been initialized here
 
     todays_date = datetime.now().strftime("%Y-%m-%d")
-    ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
+    ref = db.reference(path1)
     tasks = ref.get()
 
     if not tasks:
-        print(f"No tasks found for {computer_id} on {todays_date}.")
+        print(f"No tasks found for {computer_id1} on {todays_date}.")
         return None
 
     # Filtering tasks to find the last relevant 'start' entry based on task_keyword
@@ -170,29 +174,30 @@ def calculate_time_since_last_start(computer_id, task_keyword):
 
 
 
-def decide_and_calculate_minutes(computer_id, speech):
-    # Decide the keyword based on input_string
+def decide_and_calculate_minutes(computer_id1, speech):
+    # Initialize task_keyword before if-else chain
+    task_keyword = None
+
+    # Use if-elif-else structure to ensure only one block executes
     if speech.lower().startswith("stop task") or speech.lower().startswith("end task"):
         task_keyword = 'start task'
-        print('gotcha bitch')
-        # HAVEN'T FULLY WORKED THIS OUT YET ----------------------------------------------------------@#%!%%@#%$
-        """
-    if speech.lower().startswith("stop lab") or speech.lower().startswith("end lab"):
+        print('stop task logged')
+    elif speech.lower().startswith("stop lab") or speech.lower().startswith("end lab"):
         task_keyword = 'start lab'
-
-        For some reason when you include this it fucks over stop task
-        """
-
     elif speech.lower().startswith("stop dcr") or speech.lower().startswith("end dcr"):
         task_keyword = 'start dcr'
     else:
         print("Non-delta t related entry")
         return None, None
 
-    # Calculate minutes
-    minutes = calculate_time_since_last_start(computer_id, task_keyword)
-    return minutes, task_keyword
-
+    # Calculate minutes if task_keyword was set
+    if task_keyword:
+        minutes = calculate_time_since_last_start(computer_id1, task_keyword)
+        return minutes, task_keyword
+    else:
+        # This else is not strictly necessary due to the return statement in the first else,
+        # but it's here for logical completeness.
+        return None, None
 ################################################################################################################################################################
 
 
@@ -218,7 +223,7 @@ def record_speech():
 
 
 
-def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3):
+def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context):
     todays_date = datetime.now().strftime("%Y-%m-%d")
     global filename  # Use the globally defined filename
 
@@ -237,9 +242,9 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3):
         return tasks
 
     # Fetch the data for both computer IDs
-    data1 = db.reference(f'/tasks/{todays_date}/{computer_id1}').get()
-    data2 = db.reference(f'/tasks/{todays_date}/{computer_id2}').get()
-    data3 = db.reference(f'/tasks/{todays_date}/{computer_id3}').get()
+    data1 = db.reference(f'/main/{todays_date}/{computer_id1}/log').get()
+    data2 = db.reference(f'/main/{todays_date}/{computer_id2}/log').get()
+    data3 = db.reference(f'/main/{todays_date}/{computer_id3}/log').get()
 
     tasks1 = process_data(data1)
     tasks2 = process_data(data2, '2')  # Suffix for id in the second dataframe
@@ -275,15 +280,58 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3):
     df_merged.loc['Total', 'DCR time2'] = total_dcr2
     df_merged.loc['Total', 'DCR time3'] = total_dcr3
 
-    df_merged.loc['', 'points'] = ''
-    df_merged.loc['Trackable Statistics:', 'points'] = ''
-    df_merged.loc['DCR / Task Time Ratio', 'points'] = f"{(total_dcr1 / total_points1) * 100:.2f}%"
-    df_merged.loc['Lab time', 'points'] = '42'
-    df_merged.loc['Working on Tandem', 'points'] = '159'
-    df_merged.loc['Shits Taken', 'points'] = '3'
+
+
+    subtask_data = db.reference(f'/main/{todays_date}/{computer_id1}/subtask').get()
+    subtask_total_start_lab = 0
+
+    if subtask_data and isinstance(subtask_data, dict):
+        # Sum the 'start lab' values from each subtask
+        for key in subtask_data:
+            subtask_total_start_lab += int(subtask_data[key].get('start lab', 0))
+
+    # Remove 'idsubtask' column if it exists
+    if 'idsubtask' in df_merged.columns:
+        df_merged.drop(columns='idsubtask', inplace=True)
+
+    # Add the 'start lab' total to the DataFrame in a new row
+    subtask_row = pd.DataFrame({'points': [subtask_total_start_lab]}, index=[context])
+    
+    # Append the 'Subtask Total' row to the DataFrame
+    df_merged = df_merged._append(subtask_row)
+
     # Write the final DataFrame to a CSV file
     df_merged.to_csv(filename, index_label='Index')
     print("Data written to", filename, "successfully.")
+
+# Instead of 'start lab' being it's own column, I would instead like 'Subtask Total' to be 
+
+
+"""
+    def process_subdata(data, id_suffix=''):
+        tasks = []
+        if data:
+            for key, value in data.items():
+                # Include the unique key as 'id'
+                value['id' + id_suffix] = key
+                # Convert 'points' to an integer if it exists, else NaN
+                value[context] = int(value[context]) if {context} in value and value[context] else pd.NA
+                
+                tasks.append(value)
+        return tasks
+"""
+
+
+"""
+    df_merged.loc['', 'points'] = ''
+    df_merged.loc['Trackable Statistics:', 'points'] = ''
+    #df_merged.loc['DCR / Task Time Ratio', 'points'] = f"{(total_dcr1 / total_points1) * 100:.2f}%"
+    df_merged.loc['Lab time', 'points'] = '42'
+    df_merged.loc['Working on Tandem', 'points'] = '159'
+    df_merged.loc['Shits Taken', 'points'] = '3'
+"""
+
+    
 
 
 
@@ -314,7 +362,7 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3):
 
 
 # Function to update task and time in the Firebase database
-def update_task_in_database(computer_id, task, time, context, minutes=None, task_minutes=None, DCR_minutes=None):
+def update_task_in_database(computer_id1, task, time, context, minutes=None, task_minutes=None, DCR_minutes=None):
     """
     Updates the task in the database with the given computer_id, task, and time.
     Optionally includes minutes or DCR_minutes if provided.
@@ -328,7 +376,7 @@ def update_task_in_database(computer_id, task, time, context, minutes=None, task
     """
 
     todays_date = datetime.now().strftime("%Y-%m-%d")
-    ref = db.reference(f'/main/{todays_date}/{computer_id}/log')
+    ref = db.reference(path1)
     new_task_ref = ref.push()
 
     task_data = {
@@ -343,7 +391,7 @@ def update_task_in_database(computer_id, task, time, context, minutes=None, task
         task_data['DCR time'] = DCR_minutes
     if context is not None:
         print('there is context')
-        ref = db.reference(f'/main/{todays_date}/{computer_id}/subtask')
+        ref = db.reference(f'/main/{todays_date}/{computer_id1}/subtask')
         sub_task_ref = ref.push()
         subtask_data = {context: minutes}
         sub_task_ref.set(subtask_data)
@@ -352,12 +400,12 @@ def update_task_in_database(computer_id, task, time, context, minutes=None, task
 
 ################################################################################################################################################################
 
+
+
+
+################################################################################################################################################################
 # First, record a speech and get the current time
 speech, current_time = record_speech()
-
-  
-################################################################################################################################################################
-
 #update_task_in_database(COMPUTER_ID, speech, current_time, task_minutes, DCR_minutes):
 minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
 
@@ -372,7 +420,7 @@ else:
 
 
 # Then, fetch all data including the new entry and write it to the CSV file
-fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3)
+fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, context)
 
 print('\n\n', speech, '\n\n')
 print(f"Current Time: {current_time}")
