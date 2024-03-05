@@ -73,8 +73,17 @@ def determine_computer_ids():
 COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
 
 computer_id1 = COMPUTER_ID
-path1 = (f'/main/{todays_date}/{computer_id1}/log')
-path1s = (f'/main/{todays_date}/{computer_id1}/subtask')
+
+debug_mode = False
+
+
+if debug_mode == False:
+
+    path1 = (f'/main/{todays_date}/{computer_id1}/log')
+    path1s = (f'/main/{todays_date}/{computer_id1}/subtask')
+else:
+    path1 = (f'/debug/{todays_date}/{computer_id1}/log')
+    path1s = (f'/debug/{todays_date}/{computer_id1}/subtask')
 #result = pyfiglet.figlet_format(text) 
 #print(result) 
 #time.sleep(1)
@@ -242,7 +251,7 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
         return tasks
 
     # Fetch the data for both computer IDs
-    data1 = db.reference(f'/main/{todays_date}/{computer_id1}/log').get()
+    data1 = db.reference(path1).get()
     data2 = db.reference(f'/main/{todays_date}/{computer_id2}/log').get()
     data3 = db.reference(f'/main/{todays_date}/{computer_id3}/log').get()
 
