@@ -7,9 +7,7 @@ import pandas as pd
 import os
 import uuid 
 from dotenv import load_dotenv
-import time
-import pyfiglet
-from quo import echo
+
 
 
 load_dotenv()
@@ -17,6 +15,7 @@ load_dotenv()
 database_url = os.environ['DATABASE_URL']
 credentials_path = os.environ['CREDENTIALS_PATH']
 filename_folder = os.environ['CSV_PATH']
+filename2_folder = os.environ['REMINDERS_PATH']
 #db = DB(database_url, credentials_path)
 
 """
@@ -30,6 +29,7 @@ filename_folder = os.environ['CSV_PATH']
 
 todays_date = datetime.now().strftime("%Y-%m-%d")
 filename = filename_folder + "\Schedule_" + todays_date + ".csv"
+filename2 = filename2_folder + "\Reminders_" + todays_date + ".csv"
 
 # Path to your Firebase Admin SDK private key
 cred = credentials.Certificate(credentials_path)
@@ -85,10 +85,48 @@ COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
 
 
 ################################################################################################################################################################
+""" kinda ran out of steam at exactly this moment, this is a good idea though, you also need to read how CLASSES work
 
+def key_words_sorter(speech, key_words):
 
-def calculate_time_since_last_start_task(computer_id):
-    
+    if speech
+
+class ActionHandler:
+    def action_a(self):
+        print("Executing Function A: Task related action.")
+
+    def action_b(self):
+        print("Executing Function B: DCR related action.")
+
+    def action_c(self):
+        print("Executing Function C: Adding a reminder.")
+
+    def execute(self, command):
+        # Check for task related commands
+        if command.startswith('end task') or command.startswith('stop task'):
+            self.action_a()
+        # Check for DCR related commands
+        elif command.startswith('end DCR') or command.startswith('stop DCR'):
+            self.action_b()
+        # Check for adding a reminder
+        elif command.startswith('add reminder'):
+            self.action_c()
+        else:
+            print("Invalid command")
+
+# Example usage
+handler = ActionHandler()
+
+for input_str in inputs:
+    print(f"Input: {input_str}")
+    handler.execute(input_str)
+    print("---")
+
+"""
+
+def calculate_time_since_last_start(computer_id, task_keyword):
+    # Make sure Firebase has been initialized here
+
     todays_date = datetime.now().strftime("%Y-%m-%d")
     ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
     tasks = ref.get()
@@ -97,10 +135,10 @@ def calculate_time_since_last_start_task(computer_id):
         print(f"No tasks found for {computer_id} on {todays_date}.")
         return None
 
-    # Filtering tasks to find the last 'start task' entry
+    # Filtering tasks to find the last relevant 'start' entry based on task_keyword
     start_task_times = []
     for task_id, task_details in tasks.items():
-        if 'task' in task_details and 'start task' in task_details['task'].lower():
+        if 'task' in task_details and task_keyword in task_details['task'].lower():
             task_time_str = task_details.get('time', '')
             try:
                 task_time = datetime.strptime(task_time_str, "%H:%M:%S").time()
@@ -109,10 +147,10 @@ def calculate_time_since_last_start_task(computer_id):
                 print(f"Invalid time format for task {task_id}")
 
     if not start_task_times:
-        print("No 'start task' entries found.")
+        print(f"No '{task_keyword}' entries found.")
         return None
 
-    # Finding the last 'start task' time
+    # Finding the last relevant 'start' time
     last_start_task_time = max(start_task_times)
     # Current time
     now = datetime.now()
@@ -123,59 +161,41 @@ def calculate_time_since_last_start_task(computer_id):
     time_difference = now - last_start_datetime
     # Convert time difference to total seconds
     total_seconds = int(time_difference.total_seconds())
-    # Convert total seconds to minutes and seconds
+    # Convert total seconds to minutes
     minutes = total_seconds // 60
-    #seconds = total_seconds % 60
 
-    # Return or print the time difference in minutes and seconds
+    # Return the time difference in minutes
     return minutes
+
+
+
+
+def decide_and_calculate_minutes(computer_id, speech):
+    # Decide the keyword based on input_string
+    if speech.lower().startswith("stop task") or speech.lower().startswith("end task"):
+        task_keyword = 'start task'
+        print('gotcha bitch')
+        # HAVEN'T FULLY WORKED THIS OUT YET ----------------------------------------------------------@#%!%%@#%$
+        """
+    if speech.lower().startswith("stop lab") or speech.lower().startswith("end lab"):
+        task_keyword = 'start lab'
+
+        For some reason when you include this it fucks over stop task
+        """
+
+    elif speech.lower().startswith("stop dcr") or speech.lower().startswith("end dcr"):
+        task_keyword = 'start dcr'
+    else:
+        print("Non-delta t related entry")
+        return None, None
+
+    # Calculate minutes
+    minutes = calculate_time_since_last_start(computer_id, task_keyword)
+    return minutes, task_keyword
 
 ################################################################################################################################################################
 
 
-def calculate_time_since_last_start_DCR(computer_id):
-    # Make sure Firebase has been initialized here
-    
-    todays_date = datetime.now().strftime("%Y-%m-%d")
-    ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
-    tasks = ref.get()
-
-    if not tasks:
-        print(f"No tasks found for {computer_id} on {todays_date}.")
-        return None
-
-    # Filtering tasks to find the last 'start task' entry
-    start_task_times = []
-    for task_id, task_details in tasks.items():
-        if 'task' in task_details and 'start dcr' in task_details['task'].lower():
-            task_time_str = task_details.get('time', '')
-            try:
-                task_time = datetime.strptime(task_time_str, "%H:%M:%S").time()
-                start_task_times.append(task_time)
-            except ValueError:
-                print(f"Invalid time format for task {task_id}")
-
-    if not start_task_times:
-        print("No 'start task' entries found.")
-        return None
-
-    # Finding the last 'start task' time
-    last_start_task_time = max(start_task_times)
-    # Current time
-    now = datetime.now()
-    # Combining the current date with the last start task time for comparison
-    last_start_datetime = datetime.combine(now.date(), last_start_task_time)
-
-    # Calculating time difference
-    time_difference = now - last_start_datetime
-    # Convert time difference to total seconds
-    total_seconds = int(time_difference.total_seconds())
-    # Convert total seconds to minutes and seconds
-    DCR_minutes = total_seconds // 60
-    #seconds = total_seconds % 60
-
-    # Return or print the time difference in minutes and seconds
-    return DCR_minutes
 
 
 
@@ -246,6 +266,7 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3):
 
 
     # Add a new row for 'Total Points' and 'Total DCR time'
+    #df_merged.loc['Total', 'points'] = f"{(total_points1 / 60):.1f}"
     df_merged.loc['Total', 'points'] = total_points1
     df_merged.loc['Total', 'points2'] = total_points2
     df_merged.loc['Total', 'points3'] = total_points3
@@ -254,92 +275,99 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3):
     df_merged.loc['Total', 'DCR time2'] = total_dcr2
     df_merged.loc['Total', 'DCR time3'] = total_dcr3
 
+    df_merged.loc['', 'points'] = ''
+    df_merged.loc['Trackable Statistics:', 'points'] = ''
+    df_merged.loc['DCR / Task Time Ratio', 'points'] = f"{(total_dcr1 / total_points1) * 100:.2f}%"
+    df_merged.loc['Lab time', 'points'] = '42'
+    df_merged.loc['Working on Tandem', 'points'] = '159'
+    df_merged.loc['Shits Taken', 'points'] = '3'
     # Write the final DataFrame to a CSV file
     df_merged.to_csv(filename, index_label='Index')
     print("Data written to", filename, "successfully.")
 
 
-# Function to update task and time in the Firebase database
-def update_task_in_database(computer_id, task, time):
-    # Get today's date in the format YYYY-MM-DD
-    todays_date = datetime.now().strftime("%Y-%m-%d")
-    
-    # Reference to the tasks of the specific computer ID within the database, under today's date
-    ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
-    # Create a new task entry
-    new_task_ref = ref.push()
-  
-    # Set the task and time values in the database
-    new_task_ref.set({
-        'task': task,
-        'time': time,
-         # Use the string representation
-    })
 
-def execute_task_firebase_task_time(computer_id, task, time,minutes):
-    # Get today's date in the format YYYY-MM-DD
-    todays_date = datetime.now().strftime("%Y-%m-%d")
+
+
+
+
+"""
+2 things
+
+1) broadcast a "is_timing_a_task": True that way everytime you make an update you can add to your counter 
+2) broadcast the appendix value, this will help you sort the data later
+3) figure out how/why the lab is being placed into a column
+    the key to solving this might be in the .get() command
+
+4) the data tree might need to be reformatted such that tasks --> todays date --> ComputerID --> task/csv_data --> sub-task(lab time)
+5) you will probaably need to move everything from being under computerid to being under 'thought log' / tasks
+6) get rid of tasks at the start
+
+7) 
+
+"""
+
+
+
+
+
+
+
+# Function to update task and time in the Firebase database
+def update_task_in_database(computer_id, task, time, context, minutes=None, task_minutes=None, DCR_minutes=None):
+    """
+    Updates the task in the database with the given computer_id, task, and time.
+    Optionally includes minutes or DCR_minutes if provided.
     
-    # Reference to the tasks of the specific computer ID within the database, under today's date
-    ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
-    # Create a new task entry
-    new_task_ref = ref.push()
-  
-    # Set the task and time values in the database
-    new_task_ref.set({
-        'task': task,
-        'time': time,
-        'points': minutes
-         # Use the string representation
-    })
-def execute_task_firebase_DCR_time(computer_id, task, time,DCR_minutes):
-    # Get today's date in the format YYYY-MM-DD
+    Args:
+    - computer_id (str): The computer ID to update the task for.
+    - task (str): The task to be updated.
+    - time (str): The time at which the task is updated.
+    - minutes (int, optional): The task time in minutes, for task time updates.
+    - DCR_minutes (int, optional): The DCR time in minutes, for DCR time updates.
+    """
+
     todays_date = datetime.now().strftime("%Y-%m-%d")
-    
-    # Reference to the tasks of the specific computer ID within the database, under today's date
-    ref = db.reference(f'/tasks/{todays_date}/{computer_id}')
-    # Create a new task entry
+    ref = db.reference(f'/main/{todays_date}/{computer_id}/log')
     new_task_ref = ref.push()
-  
-    # Set the task and time values in the database
-    new_task_ref.set({
+
+    task_data = {
         'task': task,
-        'time': time,
-        'DCR time': DCR_minutes
-         # Use the string representation
-    })
+        'time': time
+    }
+    
+    # Conditionally add points or DCR time to the task data
+    if task_minutes is not None:
+        task_data['points'] = task_minutes
+    if DCR_minutes is not None:
+        task_data['DCR time'] = DCR_minutes
+    if context is not None:
+        print('there is context')
+        ref = db.reference(f'/main/{todays_date}/{computer_id}/subtask')
+        sub_task_ref = ref.push()
+        subtask_data = {context: minutes}
+        sub_task_ref.set(subtask_data)
+    # Set the task data in the database
+    new_task_ref.set(task_data)
+
+################################################################################################################################################################
 
 # First, record a speech and get the current time
 speech, current_time = record_speech()
 
-# AWIUFNAIUWPFPAW---------------------------------------------NEXT: YOU NEED TO PUT IN ALL OF THE SPEECH COMMANDS ------------------------------
-if speech.lower().startswith("start task"):
-    print("Task Timer Started")
-    if os.name == 'nt':
-        winsound.Beep(1200, 400)
-if speech.lower().startswith("start dcr"):
-    if os.name == 'nt':
-        winsound.Beep(5000, 100)
-if speech.lower().startswith("stop task") or speech.lower().startswith("end task"):
-    if os.name == 'nt':
-        winsound.Beep(1200, 400)
-    print("Task Time Counter Stopped")
-    time_diff = calculate_time_since_last_start_task(COMPUTER_ID)
-    execute_task_firebase_task_time(COMPUTER_ID, speech, current_time,time_diff)
-    if time_diff:
-        print(f"Time since last 'start task': {time_diff}")
-    
-if speech.lower().startswith("stop dcr") or speech.lower().startswith("end dcr"):
-    print("Task Time Counter Stopped")
+  
+################################################################################################################################################################
 
-    time_diff = calculate_time_since_last_start_DCR(COMPUTER_ID)
-    execute_task_firebase_DCR_time(COMPUTER_ID, speech, current_time,time_diff)
-    if time_diff:
-        print(f"Time since last 'start DCR': {time_diff}")
-    
+#update_task_in_database(COMPUTER_ID, speech, current_time, task_minutes, DCR_minutes):
+minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
 
-if  speech.lower != speech.lower().startswith("stop tasks"):
-        update_task_in_database(COMPUTER_ID, speech, current_time)
+# Depending on the context, update the database accordingly
+if context == 'start task':
+    update_task_in_database(COMPUTER_ID, speech, current_time, context, task_minutes=minutes)
+elif context == 'start dcr':
+    update_task_in_database(COMPUTER_ID, speech, current_time, context, DCR_minutes=minutes)
+else:
+    update_task_in_database(COMPUTER_ID, speech, current_time, context, minutes)
 
 
 
