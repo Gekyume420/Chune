@@ -398,16 +398,66 @@ def update_task_in_database(computer_id1, task, time, context, minutes=None, tas
     # Set the task data in the database
     new_task_ref.set(task_data)
 
-################################################################################################################################################################
 
 
-
-
-################################################################################################################################################################
 # First, record a speech and get the current time
 speech, current_time = record_speech()
 #update_task_in_database(COMPUTER_ID, speech, current_time, task_minutes, DCR_minutes):
 minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
+################################################################################################################################################################
+def add_row(df, data):
+    df2 = pd.DataFrame(data)
+    df = pd.concat([df, df2], ignore_index=True)
+    return df
+
+def write_task(df, filename):
+    df.to_csv(filename, index=False)
+def add_reminder(df, speech, current_time):
+    global filename2
+    if speech.lower().startswith("add reminder"):
+        speech = speech.split(' ', 2)[2]
+        df = add_row(df, {'time': [current_time], 'Reminder': [speech]}) 
+        
+        print("Reminder added")
+    
+    return df
+
+
+
+# Example DataFrame
+
+# Check if the file exists
+if not os.path.isfile(filename2):
+    df = pd.DataFrame()
+    # Save the DataFrame to CSV if the file does not exist
+    df.to_csv(filename2)
+else:
+    print(f"The file {filename2} already exists.")
+    todays_date = datetime.now().strftime("%Y-%m-%d")
+    df = pd.read_csv(filename2)                             #<----------- it's this, it's not reading the csv because there is no csv
+                                                        # that's why it worked yesterday, because it didn't read until after it was created 
+
+    data = add_reminder(df, speech, current_time)
+    write_task(data, filename2)
+
+"""
+if not os.path.exists(filename2):
+    
+    df = pd.DataFrame({'Column1': [1, 2], 'Column2': [3, 4]})
+    data = add_reminder(df, speech, current_time)
+    write_task(data, filename2)
+
+todays_date = datetime.now().strftime("%Y-%m-%d")
+df = pd.read_csv(filename2)                             #<----------- it's this, it's not reading the csv because there is no csv
+                                                    # that's why it worked yesterday, because it didn't read until after it was created 
+
+data = add_reminder(df, speech, current_time)
+write_task(data, filename2)
+
+"""
+
+################################################################################################################################################################
+
 
 # Depending on the context, update the database accordingly
 if context == 'start task':
