@@ -7,7 +7,29 @@ import pandas as pd
 import os
 import uuid 
 from dotenv import load_dotenv
+import tkinter as tk
+from tkinter import ttk
+from tkinter import scrolledtext
 
+
+################################################################################################################################################################
+
+
+################################################################################################################################################################
+
+
+
+todays_date = datetime.now().strftime("%Y-%m-%d")
+todays_month = datetime.now().strftime("%m")
+todays_year = datetime.now().strftime("%Y")
+
+
+
+"""
+todays_date1 = datetime.now()
+yesterdays_date = todays_date1 - timedelta(days=1)
+todays_date = yesterdays_date.strftime("%Y-%m-%d") # time travel mode
+"""
 
 
 load_dotenv()
@@ -18,16 +40,7 @@ filename_folder = os.environ['CSV_PATH']
 filename2_folder = os.environ['REMINDERS_PATH']
 #db = DB(database_url, credentials_path)
 
-"""
-        CHANGE YOUR .ENV FILE, JUST ADD SOMETHING LIKE THIS
-"""
-        #EXAMPLE: CSV_PATH="C:\Users\16198\Documents\PYTHON\Daily Schedules
-"""
 
-"""
-
-
-todays_date = datetime.now().strftime("%Y-%m-%d")
 filename = filename_folder + "\Schedule_" + todays_date + ".csv"
 filename2 = filename2_folder + "\Reminders_" + todays_date + ".csv"
 
@@ -71,19 +84,44 @@ def determine_computer_ids():
 
 
 COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
-
+"""
+COMPUTER_ID = ''
+COMPUTER_ID2 = ''
+"""
 computer_id1 = COMPUTER_ID
 
-debug_mode = False
+path1 = ''
+path1s = ''
 
+def debug():
+    global path1, path1s
+    debug_mode = debug_var.get() == 1  # 1 if checked (True), 0 if unchecked (False)
+    todays_date = datetime.now().strftime("%Y-%m-%d")
+    todays_year = datetime.now().strftime("%Y")
+    todays_month = datetime.now().strftime("%m")
+    computer_id1 = COMPUTER_ID  # Replace with the actual ID or variable
 
-if debug_mode == False:
+    if not debug_mode:
+        path1 = (f'/main/{todays_year}/{todays_month}/{todays_date}/{computer_id1}/log')
+        path1s = (f'/main/{todays_year}/{todays_month}/{todays_date}/{computer_id1}/subtask')
+    else:
+        path1 = (f'/debug/{todays_year}/{todays_month}/{todays_date}/{computer_id1}/log')
+        path1s = (f'/debug/{todays_year}/{todays_month}/{todays_date}/{computer_id1}/subtask')
 
-    path1 = (f'/main/{todays_date}/{computer_id1}/log')
-    path1s = (f'/main/{todays_date}/{computer_id1}/subtask')
-else:
-    path1 = (f'/debug/{todays_date}/{computer_id1}/log')
-    path1s = (f'/debug/{todays_date}/{computer_id1}/subtask')
+    return path1, path1s
+"""
+def switch_user():
+    
+
+    nick_mode = nick_var.get() == 1
+    if not nick_mode:
+        path1 = (f'/main/{todays_year}/{todays_month}/{todays_date}/Nick/log')
+        path1s = (f'/main/{todays_year}/{todays_month}/{todays_date}/Nick/subtask')
+
+    
+
+    return path1, path1s
+"""
 #result = pyfiglet.figlet_format(text) 
 #print(result) 
 #time.sleep(1)
@@ -93,54 +131,13 @@ else:
             Grab these paragraph comments so you don't have to keep fucking with them
 
 """
-
-#ref = db.reference(f'/tasks/{COMPUTER_ID}')
-
-
 ################################################################################################################################################################
-""" kinda ran out of steam at exactly this moment, this is a good idea though, you also need to read how CLASSES work
 
-def key_words_sorter(speech, key_words):
-
-    if speech
-
-class ActionHandler:
-    def action_a(self):
-        print("Executing Function A: Task related action.")
-
-    def action_b(self):
-        print("Executing Function B: DCR related action.")
-
-    def action_c(self):
-        print("Executing Function C: Adding a reminder.")
-
-    def execute(self, command):
-        # Check for task related commands
-        if command.startswith('end task') or command.startswith('stop task'):
-            self.action_a()
-        # Check for DCR related commands
-        elif command.startswith('end DCR') or command.startswith('stop DCR'):
-            self.action_b()
-        # Check for adding a reminder
-        elif command.startswith('add reminder'):
-            self.action_c()
-        else:
-            print("Invalid command")
-
-# Example usage
-handler = ActionHandler()
-
-for input_str in inputs:
-    print(f"Input: {input_str}")
-    handler.execute(input_str)
-    print("---")
-
-"""
 
 def calculate_time_since_last_start(computer_id1, task_keyword):
     # Make sure Firebase has been initialized here
 
-    todays_date = datetime.now().strftime("%Y-%m-%d")
+    
     ref = db.reference(path1)
     tasks = ref.get()
 
@@ -179,7 +176,6 @@ def calculate_time_since_last_start(computer_id1, task_keyword):
 
     # Return the time difference in minutes
     return minutes
-
 
 
 
@@ -227,13 +223,30 @@ def record_speech():
     if os.name == 'nt':
         winsound.Beep(700, 400)
     current_time = datetime.now().strftime("%H:%M:%S")
-    speech = r.recognize_google(audio)
+    try:
+        speech = r.recognize_google(audio)
+    except sr.UnknownValueError:
+        print("[Could not understand audio]\n")
+    except sr.RequestError as e:
+        print("[Could not understand audio]")
+
+    # Check if the checkbox is checked for red text
+    if color_var.get() == 1:
+        text_color = "red"
+    else:
+        text_color = "black"
+    
+    # Configure and insert text with specific color
+    text_area.tag_configure("color", foreground=text_color)
+    text_area.insert(tk.END, f"{current_time} - {speech}\n", "color")
+    text_area.see(tk.END)
     return speech, current_time
 
+    
 
 
 def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context):
-    todays_date = datetime.now().strftime("%Y-%m-%d")
+    
     global filename  # Use the globally defined filename
 
     # Function to process tasks, points, and DCR times
@@ -289,9 +302,38 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
     df_merged.loc['Total', 'DCR time2'] = total_dcr2
     df_merged.loc['Total', 'DCR time3'] = total_dcr3
 
+    # Your existing code to fetch and process the main data...
+
+    # Initialize totals for each tag
+    tag_totals = {'Gym': 0, 'School': 0, 'Work': 0, 'Lab': 0}
+
+    # Fetch all log entries
+    log_entries = db.reference(path1).get()
+
+    # Sum the values for each tag
+    for entry in log_entries.values():
+        for tag in tag_totals:
+            if tag in entry:
+                tag_totals[tag] += int(entry[tag])
+
+    # Remove 'idsubtask' column if it exists
+    if 'idsubtask' in df_merged.columns:
+        df_merged.drop(columns='idsubtask', inplace=True)
+
+    # Create a DataFrame for tag totals
+    tag_totals_df = pd.DataFrame(list(tag_totals.items()), columns=['task', 'points'])
+
+    # Append the tag totals DataFrame at the end of the merged DataFrame
+    final_df = pd.concat([df_merged, tag_totals_df], ignore_index=True)
+
+    # Write the final DataFrame to a CSV file
+    final_df.to_csv(filename, index_label='Index')
+    print("Data written to", filename, "successfully.")
 
 
-    subtask_data = db.reference(f'/main/{todays_date}/{computer_id1}/subtask').get()
+
+"""
+    subtask_data = db.reference(path1s).get()
     subtask_total_start_lab = 0
 
     if subtask_data and isinstance(subtask_data, dict):
@@ -313,25 +355,11 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
     df_merged.to_csv(filename, index_label='Index')
     print("Data written to", filename, "successfully.")
 
-# Instead of 'start lab' being it's own column, I would instead like 'Subtask Total' to be 
 
 
-"""
-    def process_subdata(data, id_suffix=''):
-        tasks = []
-        if data:
-            for key, value in data.items():
-                # Include the unique key as 'id'
-                value['id' + id_suffix] = key
-                # Convert 'points' to an integer if it exists, else NaN
-                value[context] = int(value[context]) if {context} in value and value[context] else pd.NA
-                
-                tasks.append(value)
-        return tasks
-"""
 
 
-"""
+
     df_merged.loc['', 'points'] = ''
     df_merged.loc['Trackable Statistics:', 'points'] = ''
     #df_merged.loc['DCR / Task Time Ratio', 'points'] = f"{(total_dcr1 / total_points1) * 100:.2f}%"
@@ -339,12 +367,6 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
     df_merged.loc['Working on Tandem', 'points'] = '159'
     df_merged.loc['Shits Taken', 'points'] = '3'
 """
-
-    
-
-
-
-
 
 
 
@@ -371,7 +393,7 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
 
 
 # Function to update task and time in the Firebase database
-def update_task_in_database(computer_id1, task, time, context, minutes=None, task_minutes=None, DCR_minutes=None):
+def update_task_in_database(tag, task, time, context, minutes=None, task_minutes=None, DCR_minutes=None):
     """
     Updates the task in the database with the given computer_id, task, and time.
     Optionally includes minutes or DCR_minutes if provided.
@@ -382,9 +404,10 @@ def update_task_in_database(computer_id1, task, time, context, minutes=None, tas
     - time (str): The time at which the task is updated.
     - minutes (int, optional): The task time in minutes, for task time updates.
     - DCR_minutes (int, optional): The DCR time in minutes, for DCR time updates.
+    - tag : from the dropdown menu in the GUI
     """
 
-    todays_date = datetime.now().strftime("%Y-%m-%d")
+    
     ref = db.reference(path1)
     new_task_ref = ref.push()
 
@@ -394,13 +417,15 @@ def update_task_in_database(computer_id1, task, time, context, minutes=None, tas
     }
     
     # Conditionally add points or DCR time to the task data
+    if tag is not None:
+        task_data[tag] = task_minutes
     if task_minutes is not None:
         task_data['points'] = task_minutes
     if DCR_minutes is not None:
         task_data['DCR time'] = DCR_minutes
     if context is not None:
         print('there is context')
-        ref = db.reference(f'/main/{todays_date}/{computer_id1}/subtask')
+        ref = db.reference(path1s)
         sub_task_ref = ref.push()
         subtask_data = {context: minutes}
         sub_task_ref.set(subtask_data)
@@ -409,10 +434,7 @@ def update_task_in_database(computer_id1, task, time, context, minutes=None, tas
 
 
 
-# First, record a speech and get the current time
-speech, current_time = record_speech()
-#update_task_in_database(COMPUTER_ID, speech, current_time, task_minutes, DCR_minutes):
-minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
+
 ################################################################################################################################################################
 def add_row(df, data):
     df2 = pd.DataFrame(data)
@@ -432,8 +454,92 @@ def add_reminder(df, speech, current_time):
     return df
 
 
+################################################################################################################################################################
+"""
+Make an "all commands" function?
 
-# Example DataFrame
+"""
+def main():
+    
+    debug()
+    #switch_user()
+    tag = tag_var.get()
+    COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
+    computer_id1 = COMPUTER_ID
+    speech, current_time = record_speech()
+    
+    minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
+    if context == 'start task':
+        update_task_in_database(tag, speech, current_time, context, task_minutes=minutes)
+    elif context == 'start dcr':
+        update_task_in_database(tag, speech, current_time, context, DCR_minutes=minutes)
+    else:
+        update_task_in_database(tag, speech, current_time, context, minutes)
+
+    fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, context)
+
+    print('\n\n', speech, '\n\n')
+    print(f"Current Time: {current_time}")
+
+# Depending on the context, update the database accordingly
+################################################################################################################################################################
+root = tk.Tk()
+root.title("Tandem 1.0.0 -alpha")
+color_var = tk.IntVar()
+
+
+# Create scrolled text area for displaying the speech
+text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD)
+text_area.pack(pady=10)
+
+# Dropdown menu options
+options = ['Lab', 'Gym', 'Work', 'School', 'None']
+
+# Create a Tkinter variable to store the selected dropdown value
+tag_var = tk.StringVar()
+
+# Create the dropdown menu
+dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
+dropdown.pack(side=tk.TOP, pady=5)
+
+# Set the default value
+dropdown.set('Select a tag')
+
+# Create a button to start recording
+record_btn = tk.Button(root, text="Record Speech", command=main)
+record_btn.pack(side=tk.LEFT, pady=5)
+
+debug_var = tk.IntVar()
+
+# Create the debug mode checkbox
+debug_checkbox = tk.Checkbutton(root, text="Debug Mode", variable=debug_var, command=debug)
+debug_checkbox.pack()
+
+"""
+nick_var = tk.IntVar()
+
+nick_checkbox = tk.Checkbutton(root, text="Nick Mode", variable=nick_var, command=switch_user)
+nick_checkbox.pack()
+"""
+# Run the Tkinter event loop
+root.mainloop()
+
+
+
+
+
+################################################################################################################################################################
+
+
+
+
+
+"""
+
+# First, record a speech and get the current time
+speech, current_time = record_speech()
+#update_task_in_database(COMPUTER_ID, speech, current_time, task_minutes, DCR_minutes):
+minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
 
 # Check if the file exists
 if not os.path.isfile(filename2):
@@ -442,47 +548,29 @@ if not os.path.isfile(filename2):
     df.to_csv(filename2)
 else:
     print(f"The file {filename2} already exists.")
-    todays_date = datetime.now().strftime("%Y-%m-%d")
-    df = pd.read_csv(filename2)                             #<----------- it's this, it's not reading the csv because there is no csv
-                                                        # that's why it worked yesterday, because it didn't read until after it was created 
-
-    data = add_reminder(df, speech, current_time)
-    write_task(data, filename2)
-
-"""
-if not os.path.exists(filename2):
     
-    df = pd.DataFrame({'Column1': [1, 2], 'Column2': [3, 4]})
+    df = pd.read_csv(filename2)                            
+                                                        
+
     data = add_reminder(df, speech, current_time)
     write_task(data, filename2)
 
-todays_date = datetime.now().strftime("%Y-%m-%d")
-df = pd.read_csv(filename2)                             #<----------- it's this, it's not reading the csv because there is no csv
-                                                    # that's why it worked yesterday, because it didn't read until after it was created 
-
-data = add_reminder(df, speech, current_time)
-write_task(data, filename2)
-
-"""
-
-################################################################################################################################################################
 
 
-# Depending on the context, update the database accordingly
+
 if context == 'start task':
     update_task_in_database(COMPUTER_ID, speech, current_time, context, task_minutes=minutes)
 elif context == 'start dcr':
     update_task_in_database(COMPUTER_ID, speech, current_time, context, DCR_minutes=minutes)
 else:
     update_task_in_database(COMPUTER_ID, speech, current_time, context, minutes)
-
-
-
 # Then, fetch all data including the new entry and write it to the CSV file
 fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, context)
 
 print('\n\n', speech, '\n\n')
 print(f"Current Time: {current_time}")
+"""
+
 
 
 
