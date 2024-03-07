@@ -416,7 +416,11 @@ def update_task_in_database(tag, task, time, context, minutes=None, task_minutes
         'time': time
     }
     
+    # i'm not sure how this is working, if should be elif instead of all if commands
     # Conditionally add points or DCR time to the task data
+
+    # need to move "if tag is not None:" part to be under "if task_minutes is not None:" so that it only tags
+    # if minutes are being recorded
     if tag is not None:
         task_data[tag] = task_minutes
     if task_minutes is not None:
