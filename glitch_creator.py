@@ -305,7 +305,7 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
     # Your existing code to fetch and process the main data...
 
     # Initialize totals for each tag
-    tag_totals = {'Gym': 0, 'School': 0, 'Work': 0, 'Lab': 0, 'Tandem': 0, 'Chores': 0}
+    tag_totals = {'Gym': 0, 'School': 0, 'Work': 0, 'Lab': 0, 'Tandem': 0}
 
     # Fetch all log entries
     log_entries = db.reference(path1).get()
@@ -421,10 +421,11 @@ def update_task_in_database(tag, task, time, context, minutes=None, task_minutes
 
     # need to move "if tag is not None:" part to be under "if task_minutes is not None:" so that it only tags
     # if minutes are being recorded
-    if tag is not None:
-        task_data[tag] = task_minutes
+    
     if task_minutes is not None:
         task_data['points'] = task_minutes
+        if tag is not None:
+            task_data[tag] = task_minutes
     if DCR_minutes is not None:
         task_data['DCR time'] = DCR_minutes
     if context is not None:
@@ -482,6 +483,10 @@ def main():
     debug()
     #switch_user()
     tag = tag_var.get()
+    
+    if tag == 'Select a tag':
+        # No tag was selected, so we set the selected_tag to an empty string or None
+        tag = ''
     COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
     computer_id1 = COMPUTER_ID
     speech, current_time = record_speech()
@@ -510,8 +515,8 @@ text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD)
 text_area.grid(row=0, column=0, columnspan=3, pady=10)  # Spanning across three columns
 
 # Dropdown menu options
-options = ['Lab', 'Gym', 'Work', 'School', 'Tandem', 'Chores', 'None']
-tag_var = tk.StringVar()
+options = ['', 'Lab', 'Gym', 'Work', 'School', 'Tandem', 'None']
+tag_var = tk.StringVar(value=options[0])
 dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
 dropdown.grid(row=1, column=0, columnspan=3, pady=5)  # Spanning across three columns
 dropdown.set('Select a tag')
@@ -593,8 +598,8 @@ print('\n\n', speech, '\n\n')
 print(f"Current Time: {current_time}")
 """
 
+"""
 
+IF YOU END TASK IN DEBUG MODE IT WILL CREATE A DATABASE GLITCH, MAY BE USEFUL FOR CREATING A GLITCH DOWN THE LINE
 
-
-
-
+"""
