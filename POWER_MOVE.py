@@ -261,8 +261,9 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
                 # Convert 'DCR time' to an integer if it exists, else NaN
                 value['DCR time'] = int(value['DCR time']) if 'DCR time' in value and value['DCR time'] else pd.NA
                 tasks.append(value)
+                
         return tasks
-
+    
     # Fetch the data for both computer IDs
     data1 = db.reference(path1).get()
     data2 = db.reference(f'/main/{todays_date}/{computer_id2}/log').get()
@@ -305,7 +306,7 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
     # Your existing code to fetch and process the main data...
 
     # Initialize totals for each tag
-    tag_totals = {'Gym': 0, 'School': 0, 'Work': 0, 'Lab': 0, 'Tandem': 0, 'Chores': 0}
+    tag_totals = {'Gym': 0, 'Class': 0, 'Work': 0, 'Lab': 0, 'Tandem': 0, 'Chores': 0}
 
     # Fetch all log entries
     log_entries = db.reference(path1).get()
@@ -330,68 +331,13 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
     final_df.to_csv(filename, index_label='Index')
     print("Data written to", filename, "successfully.")
 
-
-
-"""
-    subtask_data = db.reference(path1s).get()
-    subtask_total_start_lab = 0
-
-    if subtask_data and isinstance(subtask_data, dict):
-        # Sum the 'start lab' values from each subtask
-        for key in subtask_data:
-            subtask_total_start_lab += int(subtask_data[key].get('start lab', 0))
-
-    # Remove 'idsubtask' column if it exists
-    if 'idsubtask' in df_merged.columns:
-        df_merged.drop(columns='idsubtask', inplace=True)
-
-    # Add the 'start lab' total to the DataFrame in a new row
-    subtask_row = pd.DataFrame({'points': [subtask_total_start_lab]}, index=[context])
-    
-    # Append the 'Subtask Total' row to the DataFrame
-    df_merged = df_merged._append(subtask_row)
-
-    # Write the final DataFrame to a CSV file
-    df_merged.to_csv(filename, index_label='Index')
-    print("Data written to", filename, "successfully.")
-
-
-
-
-
-
-    df_merged.loc['', 'points'] = ''
-    df_merged.loc['Trackable Statistics:', 'points'] = ''
-    #df_merged.loc['DCR / Task Time Ratio', 'points'] = f"{(total_dcr1 / total_points1) * 100:.2f}%"
-    df_merged.loc['Lab time', 'points'] = '42'
-    df_merged.loc['Working on Tandem', 'points'] = '159'
-    df_merged.loc['Shits Taken', 'points'] = '3'
-"""
-
-
-
 """
 2 things
 
 1) broadcast a "is_timing_a_task": True that way everytime you make an update you can add to your counter 
 2) broadcast the appendix value, this will help you sort the data later
-3) figure out how/why the lab is being placed into a column
-    the key to solving this might be in the .get() command
-
-4) the data tree might need to be reformatted such that tasks --> todays date --> ComputerID --> task/csv_data --> sub-task(lab time)
-5) you will probaably need to move everything from being under computerid to being under 'thought log' / tasks
-6) get rid of tasks at the start
-
-7) 
 
 """
-
-
-
-
-
-
-
 # Function to update task and time in the Firebase database
 def update_task_in_database(tag, task, time, context, minutes=None, task_minutes=None, DCR_minutes=None):
     """
@@ -436,9 +382,6 @@ def update_task_in_database(tag, task, time, context, minutes=None, task_minutes
     # Set the task data in the database
     new_task_ref.set(task_data)
 
-
-
-
 ################################################################################################################################################################
 def add_row(df, data):
     df2 = pd.DataFrame(data)
@@ -449,10 +392,7 @@ def write_task(df, filename):
     df.to_csv(filename, index=False)
 def add_reminder(df, speech, current_time):
     global filename2
-    
-    
     df = add_row(df, {'time': [current_time], 'Reminder': [speech]}) 
-        
     print("Reminder added")
     
     return df
@@ -499,7 +439,6 @@ def main():
     print('\n\n', speech, '\n\n')
     print(f"Current Time: {current_time}")
 
-# Depending on the context, update the database accordingly
 ################################################################################################################################################################
 root = tk.Tk()
 root.title("Tandem 1.0.0 -alpha")
@@ -510,7 +449,7 @@ text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD)
 text_area.grid(row=0, column=0, columnspan=3, pady=10)  # Spanning across three columns
 
 # Dropdown menu options
-options = ['Lab', 'Gym', 'Work', 'School', 'Tandem', 'Chores', 'None']
+options = ['Lab', 'Gym', 'Work', 'Class', 'Tandem', 'Chores', 'None']
 tag_var = tk.StringVar()
 dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
 dropdown.grid(row=1, column=0, columnspan=3, pady=5)  # Spanning across three columns
@@ -552,45 +491,18 @@ root.mainloop()
 
 ################################################################################################################################################################
 
-
-
-
-
 """
 
-# First, record a speech and get the current time
-speech, current_time = record_speech()
-#update_task_in_database(COMPUTER_ID, speech, current_time, task_minutes, DCR_minutes):
-minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
+1) create the total point display in the GUI
+    -How would a running total work?
 
-# Check if the file exists
-if not os.path.isfile(filename2):
-    df = pd.DataFrame()
-    # Save the DataFrame to CSV if the file does not exist
-    df.to_csv(filename2)
-else:
-    print(f"The file {filename2} already exists.")
-    
-    df = pd.read_csv(filename2)                            
-                                                        
-
-    data = add_reminder(df, speech, current_time)
-    write_task(data, filename2)
+    -For now forget the running total, just put the points into the GUI
 
 
+2) get 'Nick mode' to work
+3) get the jackson column to represent all of the data in the database
+4) create the kai and nick columns in the GUI
 
-
-if context == 'start task':
-    update_task_in_database(COMPUTER_ID, speech, current_time, context, task_minutes=minutes)
-elif context == 'start dcr':
-    update_task_in_database(COMPUTER_ID, speech, current_time, context, DCR_minutes=minutes)
-else:
-    update_task_in_database(COMPUTER_ID, speech, current_time, context, minutes)
-# Then, fetch all data including the new entry and write it to the CSV file
-fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, context)
-
-print('\n\n', speech, '\n\n')
-print(f"Current Time: {current_time}")
 """
 
 
