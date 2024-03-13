@@ -409,7 +409,8 @@ def main():
     else:
         update_task_in_database(tag, speech, current_time, context, minutes)
 
-    update_category_sums()
+    #update_category_sums()
+    update_gui_with_user_sums(usernames)
 
     fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, context)
 
@@ -472,21 +473,19 @@ debug_checkbox.grid(row=2, column=1, pady=5)  # Aligned in the second column
 
 debug()
 ########################################################--------------------------------------------------------
-def calculate_sum_for_category(category):
-      # Adjust the path as needed
-
-    ref = db.reference(path1)
+def calculate_sum_for_category(user_name, category):
+    path = f'/main/{user_name}/{todays_date}/log'  # Dynamic path based on user_name
+    ref = db.reference(path)
     category_values = ref.get()
 
     if not isinstance(category_values, dict):
-        print(f"Data under '{path1}' is not in the expected format or is missing.")
+        print(f"Data under '{path}' is not in the expected format or is missing.")
         return 0
 
     total_sum = 0
     for key, value in category_values.items():
         if isinstance(value, dict) and category in value:
             total_sum += value[category]
-    
     return total_sum
 
 # Create a dictionary to hold the IntVars for each category
@@ -505,6 +504,8 @@ def update_category_sums():
     total_of_totals_label.config(text=f"Total of Totals: {total_of_totals}")
 # Create labels for each category sum
 category_labels = {}
+
+
 for i, category in enumerate(options):
     # Create and place the label in the grid
     category_labels[category] = tk.Label(root, text=f"{category}: {category_sums[category].get()}")
@@ -513,7 +514,11 @@ for i, category in enumerate(options):
 total_of_totals_label = tk.Label(root, text=f"Total: {total_of_totals_var.get()}")
 total_of_totals_label.grid(row=len(options)+6, column=2, sticky='w', pady=2)
 
+"""
 
+This is all fucked up
+
+"""
 # Button to update all the sums
 update_sums_button = tk.Button(root, text="Update Sums", command=update_category_sums)
 update_sums_button.grid(row=len(options)+1, column=0, pady=5)
@@ -524,6 +529,45 @@ update_sums_button.grid(row=len(options)+1, column=0, pady=5)
 reminder_btn = tk.Button(root, text="Add Reminder", command=add_reminder_button)
 reminder_btn.grid(row=2, column=2, pady=5, sticky='ew')  # Aligned in the third column
 
+##########################################$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+def fetch_usernames(exclude_name):
+    ref = db.reference('/main')
+    all_users = ref.get()  # Fetch all user data under '/main'
+    if not all_users:
+        return []
+
+    # Filter out the current user and return the list of other usernames
+    usernames = [user for user in all_users if user != exclude_name]
+    return usernames
+
+def update_usernames_dropdown(exclude_name):
+    usernames = fetch_usernames(exclude_name)
+    dropdown_name['values'] = usernames  # Update the dropdown list
+    return usernames  # Return the list of usernames
+# Call this function with the current username to update the dropdown
+# For example, if the current user is 'Jackson', call it like this:
+
+
+def update_gui_with_user_sums(usernames):
+    base_column = 3  # Starting column for the first additional user
+    for user_index, user_name in enumerate(usernames):
+        user_column = base_column + user_index
+        tk.Label(root, text=user_name).grid(row=4, column=user_column)  # User name label
+        
+        total_of_user_totals = 0
+        for i, category in enumerate(options):
+            sum_for_category = calculate_sum_for_category(user_name, category)
+            tk.Label(root, text=f"{category}: {sum_for_category}").grid(row=i+5, column=user_column)
+            total_of_user_totals += sum_for_category
+        
+        # Display total for each user
+        tk.Label(root, text=f"Total: {total_of_user_totals}").grid(row=len(options)+6, column=user_column)
+
+# Assuming 'usernames' is already defined or fetched
+usernames = update_usernames_dropdown(user_name)
+update_gui_with_user_sums(usernames)
+
+##########################################$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
 
