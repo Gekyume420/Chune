@@ -391,9 +391,7 @@ def add_reminder_button():
     data = add_reminder(df, speech, current_time)
     write_task(data, filename2)
 
-################################################################################################################################################################
-
-################################################################################################################################################################
+###########################################################################################################################################################
 def main():
     
     debug()
@@ -476,25 +474,6 @@ debug()
 ########################################################--------------------------------------------------------
 def calculate_sum_for_category(category):
       # Adjust the path as needed
-    """
-    Can I not just creat a variable [name = 'Jackson' , 'Nick', 'Kai'] for name in path1, etc?
-
-    Define a class or a function that does this that you can call?
-
-    name = name_var.get()
-    if not debug_mode and not nick_mode:
-        
-        path1 = (f'/main/{name}/{todays_date}/log')
-
-    else :
-        path1 = (f'/debug/{name}/{todays_date}/log')
-
-
-    debug(name)
-    
-    Jackson, nick, Kai = debug()
-
-    """
 
     ref = db.reference(path1)
     category_values = ref.get()
@@ -545,6 +524,10 @@ update_sums_button.grid(row=len(options)+1, column=0, pady=5)
 reminder_btn = tk.Button(root, text="Add Reminder", command=add_reminder_button)
 reminder_btn.grid(row=2, column=2, pady=5, sticky='ew')  # Aligned in the third column
 
+
+
+
+
 # Configure the column weights to ensure that they expand equally
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
@@ -580,7 +563,7 @@ Honestly may be easier to just say 'NAME = 'JACKSON' ' in the .env file
 1d) create a time travel feature, also add a refresh button that allows you to see the points without calculating the points
 
 
-2) get 'Nick mode' to work
+% 2) get 'Nick mode' to work
 3) get the jackson column to represent all of the data in the database
 4) create the kai and nick columns in the GUI
 5) points x 1 , tag x .1(or whatever the multiplier is)
