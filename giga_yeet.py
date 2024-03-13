@@ -34,10 +34,13 @@ todays_date = yesterdays_date.strftime("%Y-%m-%d") # time travel mode
 
 load_dotenv()
 
+#could also create a 1 time questionaire that you put the info into
+
 database_url = os.environ['DATABASE_URL']
 credentials_path = os.environ['CREDENTIALS_PATH']
 filename_folder = os.environ['CSV_PATH']
 filename2_folder = os.environ['REMINDERS_PATH']
+user_name = os.environ['USERNAME']
 #db = DB(database_url, credentials_path)
 
 
@@ -84,44 +87,49 @@ def determine_computer_ids():
 
 
 COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
-"""
-COMPUTER_ID = ''
-COMPUTER_ID2 = ''
-"""
+
+
 computer_id1 = COMPUTER_ID
 
+
 path1 = ''
-path1s = ''
+path1s = (f'/main/{computer_id1}/{todays_date}/subtask')
+path2 = (f'/main/{todays_year}/{todays_month}/{todays_date}/Nick/log')
+
 
 def debug():
     global path1, path1s
     debug_mode = debug_var.get() == 1  # 1 if checked (True), 0 if unchecked (False)
+    
     todays_date = datetime.now().strftime("%Y-%m-%d")
-    todays_year = datetime.now().strftime("%Y")
-    todays_month = datetime.now().strftime("%m")
-    computer_id1 = COMPUTER_ID  # Replace with the actual ID or variable
+   # todays_year = datetime.now().strftime("%Y")
+   # todays_month = datetime.now().strftime("%m")
+   # computer_id1 = COMPUTER_ID  # Replace with the actual ID or variable
 
+
+
+    name = name_var.get()
     if not debug_mode:
-        path1 = (f'/main/{todays_year}/{todays_month}/{todays_date}/{computer_id1}/log')
-        path1s = (f'/main/{todays_year}/{todays_month}/{todays_date}/{computer_id1}/subtask')
-    else:
-        path1 = (f'/debug/{todays_year}/{todays_month}/{todays_date}/{computer_id1}/log')
-        path1s = (f'/debug/{todays_year}/{todays_month}/{todays_date}/{computer_id1}/subtask')
+        
+        path1 = (f'/main/{name}/{todays_date}/log')
+
+    else :
+        path1 = (f'/debug/{name}/{todays_date}/log')
+        
+
+    """
+    I think I should modify this to include: 
+    
+    'view' (what month/day is it?)
+    'nick mode'
+
+    """
+
+
+
 
     return path1, path1s
-"""
-def switch_user():
-    
 
-    nick_mode = nick_var.get() == 1
-    if not nick_mode:
-        path1 = (f'/main/{todays_year}/{todays_month}/{todays_date}/Nick/log')
-        path1s = (f'/main/{todays_year}/{todays_month}/{todays_date}/Nick/subtask')
-
-    
-
-    return path1, path1s
-"""
 #result = pyfiglet.figlet_format(text) 
 #print(result) 
 #time.sleep(1)
@@ -136,7 +144,6 @@ def switch_user():
 
 def calculate_time_since_last_start(computer_id1, task_keyword):
     # Make sure Firebase has been initialized here
-
     
     ref = db.reference(path1)
     tasks = ref.get()
@@ -266,6 +273,7 @@ def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context
     
     # Fetch the data for both computer IDs
     data1 = db.reference(path1).get()
+    #data2 = db.reference(path2).get()
     data2 = db.reference(f'/main/{todays_date}/{computer_id2}/log').get()
     data3 = db.reference(f'/main/{todays_date}/{computer_id3}/log').get()
 
@@ -362,11 +370,7 @@ def update_task_in_database(tag, task, time, context, minutes=None, task_minutes
         'time': time
     }
     
-    # i'm not sure how this is working, if should be elif instead of all if commands
-    # Conditionally add points or DCR time to the task data
-
-    # need to move "if tag is not None:" part to be under "if task_minutes is not None:" so that it only tags
-    # if minutes are being recorded
+   
     if tag is not None:
         task_data[tag] = task_minutes
     if task_minutes is not None:
@@ -398,7 +402,6 @@ def add_reminder(df, speech, current_time):
     return df
 #######################################################################################
 
-
 def add_reminder_button():
     speech, current_time = record_speech()
     if not os.path.isfile(filename2):
@@ -413,17 +416,18 @@ def add_reminder_button():
     write_task(data, filename2)
 
 ################################################################################################################################################################
-"""
-Make an "all commands" function?
 
-"""
+################################################################################################################################################################
 def main():
     
     debug()
-    #switch_user()
+    
+    
     tag = tag_var.get()
     COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
-    computer_id1 = COMPUTER_ID
+    
+
+    #switch_user()
     speech, current_time = record_speech()
     
     minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
@@ -434,6 +438,9 @@ def main():
     else:
         update_task_in_database(tag, speech, current_time, context, minutes)
 
+    #calculate_sum()
+    update_category_sums()
+
     fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, context)
 
     print('\n\n', speech, '\n\n')
@@ -441,8 +448,24 @@ def main():
 
 ################################################################################################################################################################
 root = tk.Tk()
-root.title("Tandem 1.0.0 -alpha")
+root.title("Tandem 1.0.1 -alpha")
 color_var = tk.IntVar()
+
+
+"""
+# Create a grid of Frame widgets with distinct background colors
+for r in range(16):  # Adjust the range based on your grid
+    for c in range(3):  # Adjust the range based on your grid
+        frame = tk.Frame(root, borderwidth=1, relief="solid", bg="grey")
+        frame.grid(row=r, column=c, padx=5, pady=5, sticky="nsew")
+
+# Now, you can create your actual widgets and place them on top of the grid frames
+
+# Configure the column and row weights to ensure that they expand equally
+for i in range(16):  # Adjust the range based on your grid
+    root.grid_columnconfigure(i, weight=1)
+    root.grid_rowconfigure(i, weight=1)
+"""
 
 # Create scrolled text area for displaying the speech
 text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD)
@@ -455,6 +478,16 @@ dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
 dropdown.grid(row=1, column=0, columnspan=3, pady=5)  # Spanning across three columns
 dropdown.set('Select a tag')
 
+"""
+
+I now need a function that pulls the usernames except for user_name
+
+"""
+# future reference names = [{user_name}, 'Nick', 'Kai']
+names = ['Jackson', 'Nick', 'Kai']
+name_var = tk.StringVar()
+dropdown_name = ttk.Combobox(root, textvariable=name_var, values=names)
+dropdown_name.grid(row=1, column=0, pady=5)
 # Create a button to start recording
 record_btn = tk.Button(root, text="Record Speech", command=main)
 record_btn.grid(row=2, column=0, pady=5, sticky='ew')  # Aligned in the first column
@@ -464,6 +497,86 @@ debug_var = tk.IntVar()
 debug_checkbox = tk.Checkbutton(root, text="Debug Mode", variable=debug_var, command=debug)
 debug_checkbox.grid(row=2, column=1, pady=5)  # Aligned in the second column
 
+
+
+debug()
+########################################################--------------------------------------------------------
+def calculate_sum_for_category(category):
+      # Adjust the path as needed
+    
+
+    """
+    Can I not just creat a variable [name = 'Jackson' , 'Nick', 'Kai'] for name in path1, etc?
+
+    Define a class or a function that does this that you can call?
+
+    name = name_var.get()
+    if not debug_mode and not nick_mode:
+        
+        path1 = (f'/main/{name}/{todays_date}/log')
+
+    else :
+        path1 = (f'/debug/{name}/{todays_date}/log')
+
+
+    debug(name)
+    
+    Jackson, nick, Kai = debug()
+
+    """
+
+
+
+    ref = db.reference(path1)
+    category_values = ref.get()
+
+    if not isinstance(category_values, dict):
+        print(f"Data under '{path1}' is not in the expected format or is missing.")
+        return 0
+
+    total_sum = 0
+    for key, value in category_values.items():
+        if isinstance(value, dict) and category in value:
+            total_sum += value[category]
+    
+    return total_sum
+
+# Create a dictionary to hold the IntVars for each category
+category_sums = {category: tk.IntVar(value=0) for category in options}
+
+total_of_totals_var = tk.IntVar(value=0)
+# Function to update all category sums & provides the 'Total:' aka total_of_totals
+def update_category_sums():
+    total_of_totals = 0
+    for category in options:
+        sum_for_category = calculate_sum_for_category(category)
+        category_sums[category].set(sum_for_category)
+        category_labels[category].config(text=f"{category}: {sum_for_category}")
+        total_of_totals += sum_for_category
+    total_of_totals_var.set(total_of_totals)
+    total_of_totals_label.config(text=f"Total of Totals: {total_of_totals}")
+# Create labels for each category sum
+category_labels = {}
+for i, category in enumerate(options):
+    # Create and place the label in the grid
+    category_labels[category] = tk.Label(root, text=f"{category}: {category_sums[category].get()}")
+    category_labels[category].grid(row=i+5, column=2, sticky='w', pady=2)
+
+total_of_totals_label = tk.Label(root, text=f"Total: {total_of_totals_var.get()}")
+total_of_totals_label.grid(row=len(options)+6, column=2, sticky='w', pady=2)
+
+
+# Button to update all the sums
+update_sums_button = tk.Button(root, text="Update Sums", command=update_category_sums)
+update_sums_button.grid(row=len(options)+1, column=0, pady=5)
+
+
+
+# Create a Label to display the total_sum
+#total_sum_label = tk.Label(root, text=f"Total", textvariable=total_sum_var)
+#total_sum_label.grid(row=4, column=0, pady=5)
+
+########################################################--------------------------------------------------------
 # Create a button to add a reminder
 reminder_btn = tk.Button(root, text="Add Reminder", command=add_reminder_button)
 reminder_btn.grid(row=2, column=2, pady=5, sticky='ew')  # Aligned in the third column
@@ -472,16 +585,8 @@ reminder_btn.grid(row=2, column=2, pady=5, sticky='ew')  # Aligned in the third 
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
 root.grid_columnconfigure(2, weight=1)
+#root.grid_columnconfigure(3, weight=1) #this might fuck things up
 
-
-
-
-"""
-nick_var = tk.IntVar()
-
-nick_checkbox = tk.Checkbutton(root, text="Nick Mode", variable=nick_var, command=switch_user)
-nick_checkbox.pack()
-"""
 # Run the Tkinter event loop
 root.mainloop()
 
@@ -492,6 +597,15 @@ root.mainloop()
 ################################################################################################################################################################
 
 """
+**** Goal for today ****
+
+GLOBAL LAB TIME
+Get the point breakdown to display for each user (should I?) -- at least create a method of refering to 
+each users total. Use your laptop if you have to.
+Honestly may be easier to just say 'NAME = 'JACKSON' ' in the .env file
+
+
+
 
 1) create the total point display in the GUI
     -How would a running total work?
@@ -501,10 +615,20 @@ root.mainloop()
 
 1a) pop up window after "end task", [Please set the task catagory: Work, Gym, School, other]
 1b) other gets sent to a different place that I can monitor and begin to include in the code
+
+1c) ! I know you hate the pandas, but it might legitimately be the best way to represent the data in the GUI
+1d) create a time travel feature, also add a refresh button that allows you to see the points without calculating the points
+
+
 2) get 'Nick mode' to work
 3) get the jackson column to represent all of the data in the database
 4) create the kai and nick columns in the GUI
 5) points x 1 , tag x .1(or whatever the multiplier is)
+
+
+I also just thought of this: under each username you could build a path called 'Profile', the cron job puts the data 
+into this 
+
 
 """
 
