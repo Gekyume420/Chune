@@ -11,14 +11,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import scrolledtext
 
-
-################################################################################################################################################################
-
-
-################################################################################################################################################################
-
-
-
 todays_date = datetime.now().strftime("%Y-%m-%d")
 todays_month = datetime.now().strftime("%m")
 todays_year = datetime.now().strftime("%Y")
@@ -30,12 +22,9 @@ todays_date1 = datetime.now()
 yesterdays_date = todays_date1 - timedelta(days=1)
 todays_date = yesterdays_date.strftime("%Y-%m-%d") # time travel mode
 """
-
-
 load_dotenv()
 
 #could also create a 1 time questionaire that you put the info into
-
 database_url = os.environ['DATABASE_URL']
 credentials_path = os.environ['CREDENTIALS_PATH']
 filename_folder = os.environ['CSV_PATH']
@@ -50,8 +39,6 @@ filename2 = filename2_folder + "\Reminders_" + todays_date + ".csv"
 # Path to your Firebase Admin SDK private key
 cred = credentials.Certificate(credentials_path)
 firebase_admin.initialize_app(cred, {'databaseURL': database_url})
-
-
 
 # fix for mac
 try:
@@ -105,8 +92,6 @@ def debug():
    # todays_year = datetime.now().strftime("%Y")
    # todays_month = datetime.now().strftime("%m")
    # computer_id1 = COMPUTER_ID  # Replace with the actual ID or variable
-
-
 
     name = name_var.get()
     if not debug_mode:
@@ -184,8 +169,6 @@ def calculate_time_since_last_start(computer_id1, task_keyword):
     # Return the time difference in minutes
     return minutes
 
-
-
 def decide_and_calculate_minutes(computer_id1, speech):
     # Initialize task_keyword before if-else chain
     task_keyword = None
@@ -211,10 +194,6 @@ def decide_and_calculate_minutes(computer_id1, speech):
         # but it's here for logical completeness.
         return None, None
 ################################################################################################################################################################
-
-
-
-
 
 ################################################################################################################################################################
 def record_speech():
@@ -248,9 +227,6 @@ def record_speech():
     text_area.insert(tk.END, f"{current_time} - {speech}\n", "color")
     text_area.see(tk.END)
     return speech, current_time
-
-    
-
 
 def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context):
     
@@ -361,7 +337,6 @@ def update_task_in_database(tag, task, time, context, minutes=None, task_minutes
     - tag : from the dropdown menu in the GUI
     """
 
-    
     ref = db.reference(path1)
     new_task_ref = ref.push()
 
@@ -370,7 +345,6 @@ def update_task_in_database(tag, task, time, context, minutes=None, task_minutes
         'time': time
     }
     
-   
     if tag is not None:
         task_data[tag] = task_minutes
     if task_minutes is not None:
@@ -422,12 +396,9 @@ def main():
     
     debug()
     
-    
     tag = tag_var.get()
     COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
     
-
-    #switch_user()
     speech, current_time = record_speech()
     
     minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
@@ -438,7 +409,6 @@ def main():
     else:
         update_task_in_database(tag, speech, current_time, context, minutes)
 
-    #calculate_sum()
     update_category_sums()
 
     fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, context)
@@ -453,6 +423,9 @@ color_var = tk.IntVar()
 
 
 """
+UN-COMMENT THIS BULLSHIT TO HELP W/ THE GUI LAYOUT (hint: if "columnspan=3" is said too many times it fucks up everything)
+
+
 # Create a grid of Frame widgets with distinct background colors
 for r in range(16):  # Adjust the range based on your grid
     for c in range(3):  # Adjust the range based on your grid
@@ -497,14 +470,10 @@ debug_var = tk.IntVar()
 debug_checkbox = tk.Checkbutton(root, text="Debug Mode", variable=debug_var, command=debug)
 debug_checkbox.grid(row=2, column=1, pady=5)  # Aligned in the second column
 
-
-
 debug()
 ########################################################--------------------------------------------------------
 def calculate_sum_for_category(category):
       # Adjust the path as needed
-    
-
     """
     Can I not just creat a variable [name = 'Jackson' , 'Nick', 'Kai'] for name in path1, etc?
 
@@ -524,8 +493,6 @@ def calculate_sum_for_category(category):
     Jackson, nick, Kai = debug()
 
     """
-
-
 
     ref = db.reference(path1)
     category_values = ref.get()
@@ -571,11 +538,6 @@ update_sums_button = tk.Button(root, text="Update Sums", command=update_category
 update_sums_button.grid(row=len(options)+1, column=0, pady=5)
 
 
-
-# Create a Label to display the total_sum
-#total_sum_label = tk.Label(root, text=f"Total", textvariable=total_sum_var)
-#total_sum_label.grid(row=4, column=0, pady=5)
-
 ########################################################--------------------------------------------------------
 # Create a button to add a reminder
 reminder_btn = tk.Button(root, text="Add Reminder", command=add_reminder_button)
@@ -589,10 +551,6 @@ root.grid_columnconfigure(2, weight=1)
 
 # Run the Tkinter event loop
 root.mainloop()
-
-
-
-
 
 ################################################################################################################################################################
 
