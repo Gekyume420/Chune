@@ -12,28 +12,19 @@ from tkinter import ttk
 from tkinter import scrolledtext
 
 todays_date = datetime.now().strftime("%Y-%m-%d")
-todays_month = datetime.now().strftime("%m")
-todays_year = datetime.now().strftime("%Y")
 
-
-
-"""
-todays_date1 = datetime.now()
-yesterdays_date = todays_date1 - timedelta(days=1)
-todays_date = yesterdays_date.strftime("%Y-%m-%d") # time travel mode
-"""
 load_dotenv()
 
 #could also create a 1 time questionaire that you put the info into
 database_url = os.environ['DATABASE_URL']
 credentials_path = os.environ['CREDENTIALS_PATH']
-filename_folder = os.environ['CSV_PATH']
+#filename_folder = os.environ['CSV_PATH']
 filename2_folder = os.environ['REMINDERS_PATH']
-user_name = os.environ['USERNAME']
+user_name = os.environ['USER_NAME']
 #db = DB(database_url, credentials_path)
 
 
-filename = filename_folder + "\Schedule_" + todays_date + ".csv"
+
 filename2 = filename2_folder + "\Reminders_" + todays_date + ".csv"
 
 # Path to your Firebase Admin SDK private key
@@ -46,54 +37,11 @@ try:
 except:
     pass
 
-#THIS IS ABOUT TO BE REDUNDANT DON'T WORRY
-
-def determine_computer_ids():
-    
-    comp_name = uuid.UUID(int=uuid.getnode()).hex[-12:]
-    
-    COMPUTER_ID = None
-    COMPUTER_ID2 = None
-    COMPUTER_ID3 = None
-    text = None
-    
-    if comp_name == 'f21898950b33':
-        COMPUTER_ID = 'Nick'
-        COMPUTER_ID2 = 'Jackson'
-        COMPUTER_ID3 = 'Kai'
-        text = COMPUTER_ID + ' is  gay  8====D'
-    if comp_name == '2cf05d760155':
-        COMPUTER_ID = 'Jackson'
-        COMPUTER_ID3 = 'Kai'
-        COMPUTER_ID2 = 'Nick'
-        text = 'Welcome ,  King'
-    else:
-        COMPUTER_ID = 'Kai'
-        COMPUTER_ID2 = 'Jackson'
-        COMPUTER_ID3 = 'Nick'
-        #text = 'Welcome ,  King'
-    return COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text
-
-
-COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
-
-
-computer_id1 = COMPUTER_ID
-
-
 path1 = ''
-path1s = (f'/main/{computer_id1}/{todays_date}/subtask')
-path2 = (f'/main/{todays_year}/{todays_month}/{todays_date}/Nick/log')
-
 
 def debug():
-    global path1, path1s
+    global path1
     debug_mode = debug_var.get() == 1  # 1 if checked (True), 0 if unchecked (False)
-    
-    todays_date = datetime.now().strftime("%Y-%m-%d")
-   # todays_year = datetime.now().strftime("%Y")
-   # todays_month = datetime.now().strftime("%m")
-   # computer_id1 = COMPUTER_ID  # Replace with the actual ID or variable
 
     name = name_var.get()
     if not debug_mode:
@@ -103,30 +51,11 @@ def debug():
     else :
         path1 = (f'/debug/{name}/{todays_date}/log')
         
-
-    """
-    I think I should modify this to include: 
-    
-    'view' (what month/day is it?)
-    'nick mode'
-
-    """
-
-
-
-
-    return path1, path1s
+    return path1
 
 #result = pyfiglet.figlet_format(text) 
 #print(result) 
 #time.sleep(1)
-
-
-"""
-            Grab these paragraph comments so you don't have to keep fucking with them
-
-"""
-################################################################################################################################################################
 
 
 def calculate_time_since_last_start(computer_id1, task_keyword):
@@ -195,9 +124,7 @@ def decide_and_calculate_minutes(computer_id1, speech):
         # This else is not strictly necessary due to the return statement in the first else,
         # but it's here for logical completeness.
         return None, None
-################################################################################################################################################################
 
-################################################################################################################################################################
 def record_speech():
     r = sr.Recognizer()
     mic = sr.Microphone()
@@ -230,100 +157,6 @@ def record_speech():
     text_area.see(tk.END)
     return speech, current_time
 
-def fetch_data_and_write_to_csv(computer_id1, computer_id2, computer_id3,context):
-    
-    global filename  # Use the globally defined filename
-
-    # Function to process tasks, points, and DCR times
-    def process_data(data, id_suffix=''):
-        tasks = []
-        if data:
-            for key, value in data.items():
-                # Include the unique key as 'id'
-                value['id' + id_suffix] = key
-                # Convert 'points' to an integer if it exists, else NaN
-                value['points'] = int(value['points']) if 'points' in value and value['points'] else pd.NA
-                # Convert 'DCR time' to an integer if it exists, else NaN
-                value['DCR time'] = int(value['DCR time']) if 'DCR time' in value and value['DCR time'] else pd.NA
-                tasks.append(value)
-                
-        return tasks
-    
-    # Fetch the data for both computer IDs
-    data1 = db.reference(path1).get()
-    #data2 = db.reference(path2).get()
-    data2 = db.reference(f'/main/{todays_date}/{computer_id2}/log').get()
-    data3 = db.reference(f'/main/{todays_date}/{computer_id3}/log').get()
-
-    tasks1 = process_data(data1)
-    tasks2 = process_data(data2, '2')  # Suffix for id in the second dataframe
-    tasks3 = process_data(data3, '3')
-
-    df1 = pd.DataFrame(tasks1)
-    df2 = pd.DataFrame(tasks2)
-    df3 = pd.DataFrame(tasks3)
-
-    # Calculate total points and DCR times for each DataFrame, considering only non-zero values
-    total_points1 = df1['points'].dropna().astype(int).sum() if 'points' in df1.columns else 0
-    total_points2 = df2['points'].dropna().astype(int).sum() if 'points' in df2.columns else 0
-    total_points3 = df3['points'].dropna().astype(int).sum() if 'points' in df3.columns else 0
-
-    total_dcr1 = df1['DCR time'].dropna().astype(int).sum() if 'DCR time' in df1.columns else 0
-    total_dcr2 = df2['DCR time'].dropna().astype(int).sum() if 'DCR time' in df2.columns else 0
-    total_dcr3 = df3['DCR time'].dropna().astype(int).sum() if 'DCR time' in df3.columns else 0
-
-    # First, merge df1 and df2
-    df_merged = pd.merge(df1, df2, left_index=True, right_index=True, how='outer', suffixes=('', '2'))
-
-    # Then, merge the result with df3
-    df_merged = pd.merge(df_merged, df3, left_index=True, right_index=True, how='outer', suffixes=('', '3'))
-
-
-    # Add a new row for 'Total Points' and 'Total DCR time'
-    #df_merged.loc['Total', 'points'] = f"{(total_points1 / 60):.1f}"
-    df_merged.loc['Total', 'points'] = total_points1
-    df_merged.loc['Total', 'points2'] = total_points2
-    df_merged.loc['Total', 'points3'] = total_points3
-
-    df_merged.loc['Total', 'DCR time'] = total_dcr1
-    df_merged.loc['Total', 'DCR time2'] = total_dcr2
-    df_merged.loc['Total', 'DCR time3'] = total_dcr3
-
-    # Your existing code to fetch and process the main data...
-
-    # Initialize totals for each tag
-    tag_totals = {'Gym': 0, 'Class': 0, 'Work': 0, 'Lab': 0, 'Tandem': 0, 'Chores': 0}
-
-    # Fetch all log entries
-    log_entries = db.reference(path1).get()
-
-    # Sum the values for each tag
-    for entry in log_entries.values():
-        for tag in tag_totals:
-            if tag in entry:
-                tag_totals[tag] += int(entry[tag])
-
-    # Remove 'idsubtask' column if it exists
-    if 'idsubtask' in df_merged.columns:
-        df_merged.drop(columns='idsubtask', inplace=True)
-
-    # Create a DataFrame for tag totals
-    tag_totals_df = pd.DataFrame(list(tag_totals.items()), columns=['task', 'points'])
-
-    # Append the tag totals DataFrame at the end of the merged DataFrame
-    final_df = pd.concat([df_merged, tag_totals_df], ignore_index=True)
-
-    # Write the final DataFrame to a CSV file
-    final_df.to_csv(filename, index_label='Index')
-    print("Data written to", filename, "successfully.")
-
-"""
-2 things
-
-1) broadcast a "is_timing_a_task": True that way everytime you make an update you can add to your counter 
-2) broadcast the appendix value, this will help you sort the data later
-
-"""
 # Function to update task and time in the Firebase database
 def update_task_in_database(tag, task, time, context, minutes=None, task_minutes=None, DCR_minutes=None):
     """
@@ -353,12 +186,7 @@ def update_task_in_database(tag, task, time, context, minutes=None, task_minutes
         task_data['points'] = task_minutes
     if DCR_minutes is not None:
         task_data['DCR time'] = DCR_minutes
-    if context is not None:
-        print('there is context')
-        ref = db.reference(path1s)
-        sub_task_ref = ref.push()
-        subtask_data = {context: minutes}
-        sub_task_ref.set(subtask_data)
+    
     # Set the task data in the database
     new_task_ref.set(task_data)
 
@@ -373,10 +201,9 @@ def write_task(df, filename):
 def add_reminder(df, speech, current_time):
     global filename2
     df = add_row(df, {'time': [current_time], 'Reminder': [speech]}) 
-    print("Reminder added")
+    print(f"\n{speech}\n\nReminder added")
     
     return df
-#######################################################################################
 
 def add_reminder_button():
     speech, current_time = record_speech()
@@ -397,11 +224,12 @@ def main():
     debug()
     
     tag = tag_var.get()
-    COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, text = determine_computer_ids()
+    name = name_var.get()
+    
     
     speech, current_time = record_speech()
     
-    minutes, context = decide_and_calculate_minutes(COMPUTER_ID, speech)
+    minutes, context = decide_and_calculate_minutes(name, speech)
     if context == 'start task':
         update_task_in_database(tag, speech, current_time, context, task_minutes=minutes)
     elif context == 'start dcr':
@@ -411,8 +239,7 @@ def main():
 
     #update_category_sums()
     update_gui_with_user_sums(usernames)
-
-    fetch_data_and_write_to_csv(COMPUTER_ID, COMPUTER_ID2, COMPUTER_ID3, context)
+    fetch_tasks_and_times(user_name, format_date(current_date))
 
     print('\n\n', speech, '\n\n')
     print(f"Current Time: {current_time}")
@@ -439,11 +266,47 @@ for r in range(16):  # Adjust the range based on your grid
 for i in range(16):  # Adjust the range based on your grid
     root.grid_columnconfigure(i, weight=1)
     root.grid_rowconfigure(i, weight=1)
-"""
 
 # Create scrolled text area for displaying the speech
 text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD)
 text_area.grid(row=0, column=0, columnspan=3, pady=10)  # Spanning across three columns
+
+"""
+
+def create_date_navigator(root):
+    current_date = datetime.now()
+
+    def format_date(date):
+        return date.strftime("%Y-%m-%d")
+
+    def update_label():
+        date_label.config(text=format_date(current_date))
+
+    def decrement_date():
+        nonlocal current_date
+        current_date -= timedelta(days=1)
+        update_label()
+        fetch_tasks_and_times(name_var.get(),format_date(current_date))  # Refresh tasks based on new date
+
+    def increment_date():
+        nonlocal current_date
+        current_date += timedelta(days=1)
+        update_label()
+        fetch_tasks_and_times(name_var.get(),format_date(current_date))  # Refresh tasks based on new date
+
+    # GUI Elements
+    left_arrow_button = ttk.Button(root, text="<", command=decrement_date)
+    left_arrow_button.grid(row=3, column=0, pady=5, sticky='w')
+
+    date_label = ttk.Label(root, text=format_date(current_date))
+    date_label.grid(row=3, column=1, pady=5)
+
+    right_arrow_button = ttk.Button(root, text=">", command=increment_date)
+    right_arrow_button.grid(row=3, column=2, pady=5, sticky='e')
+
+    return current_date, format_date
+
+current_date, format_date = create_date_navigator(root)
 
 # Dropdown menu options
 options = ['Lab', 'Gym', 'Work', 'Class', 'Tandem', 'Chores', 'None']
@@ -452,11 +315,6 @@ dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
 dropdown.grid(row=1, column=0, columnspan=3, pady=5)  # Spanning across three columns
 dropdown.set('Select a tag')
 
-"""
-
-I now need a function that pulls the usernames except for user_name
-
-"""
 # future reference names = [{user_name}, 'Nick', 'Kai']
 names = ['Jackson', 'Nick', 'Kai']
 name_var = tk.StringVar()
@@ -473,8 +331,8 @@ debug_checkbox.grid(row=2, column=1, pady=5)  # Aligned in the second column
 
 debug()
 ########################################################--------------------------------------------------------
-def calculate_sum_for_category(user_name, category):
-    path = f'/main/{user_name}/{todays_date}/log'  # Dynamic path based on user_name
+def calculate_sum_for_category(user_name, category, date):
+    path = f'/main/{user_name}/{date}/log'  # Dynamic path based on user_name
     ref = db.reference(path)
     category_values = ref.get()
 
@@ -493,38 +351,8 @@ category_sums = {category: tk.IntVar(value=0) for category in options}
 
 total_of_totals_var = tk.IntVar(value=0)
 # Function to update all category sums & provides the 'Total:' aka total_of_totals
-def update_category_sums():
-    total_of_totals = 0
-    for category in options:
-        sum_for_category = calculate_sum_for_category(category)
-        category_sums[category].set(sum_for_category)
-        category_labels[category].config(text=f"{category}: {sum_for_category}")
-        total_of_totals += sum_for_category
-    total_of_totals_var.set(total_of_totals)
-    total_of_totals_label.config(text=f"Total of Totals: {total_of_totals}")
-# Create labels for each category sum
-category_labels = {}
 
 
-for i, category in enumerate(options):
-    # Create and place the label in the grid
-    category_labels[category] = tk.Label(root, text=f"{category}: {category_sums[category].get()}")
-    category_labels[category].grid(row=i+5, column=2, sticky='w', pady=2)
-
-total_of_totals_label = tk.Label(root, text=f"Total: {total_of_totals_var.get()}")
-total_of_totals_label.grid(row=len(options)+6, column=2, sticky='w', pady=2)
-
-"""
-
-This is all fucked up
-
-"""
-# Button to update all the sums
-update_sums_button = tk.Button(root, text="Update Sums", command=update_category_sums)
-update_sums_button.grid(row=len(options)+1, column=0, pady=5)
-
-
-########################################################--------------------------------------------------------
 # Create a button to add a reminder
 reminder_btn = tk.Button(root, text="Add Reminder", command=add_reminder_button)
 reminder_btn.grid(row=2, column=2, pady=5, sticky='ew')  # Aligned in the third column
@@ -537,7 +365,8 @@ def fetch_usernames(exclude_name):
         return []
 
     # Filter out the current user and return the list of other usernames
-    usernames = [user for user in all_users if user != exclude_name]
+    #usernames = [user for user in all_users if user != exclude_name]
+    usernames = [user for user in all_users]
     return usernames
 
 def update_usernames_dropdown(exclude_name):
@@ -556,7 +385,7 @@ def update_gui_with_user_sums(usernames):
         
         total_of_user_totals = 0
         for i, category in enumerate(options):
-            sum_for_category = calculate_sum_for_category(user_name, category)
+            sum_for_category = calculate_sum_for_category(user_name, category, format_date(current_date))
             tk.Label(root, text=f"{category}: {sum_for_category}").grid(row=i+5, column=user_column)
             total_of_user_totals += sum_for_category
         
@@ -567,10 +396,35 @@ def update_gui_with_user_sums(usernames):
 usernames = update_usernames_dropdown(user_name)
 update_gui_with_user_sums(usernames)
 
-##########################################$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+##########################################$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$====================================================================================================
+
+def fetch_tasks_and_times(user_name, date):
+    
+    path = (f"/main/{user_name}/{date}/log") # why does user_name pull up my actual username and not 'Jackson' ?
+    ref = db.reference(path)
+    tasks = ref.get()
+
+    if not isinstance(tasks, dict):
+        print(f"Data under '{path}' is not in the expected format or is missing.")
+        return
+
+    # Clear the current content in the text area
+    text_area.delete(1.0, tk.END)
+    
+    # Iterate over the tasks and insert them into the text area
+    for task_id, task_info in tasks.items():
+        if 'task' in task_info and 'time' in task_info:
+            text_area.insert(tk.END, f"{task_info['time']} - {task_info['task']}\n")
+
+text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD)
+text_area.grid(row=0, column=0, columnspan=3, pady=10, padx=10)
+
+fetch_tasks_and_times(user_name, format_date(current_date)) # starts the script off by loading your personal shit first
+
+ 
 
 
-
+##########################################$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$====================================================================================================
 
 # Configure the column weights to ensure that they expand equally
 root.grid_columnconfigure(0, weight=1)
@@ -592,7 +446,7 @@ each users total. Use your laptop if you have to.
 Honestly may be easier to just say 'NAME = 'JACKSON' ' in the .env file
 
 
-
+** put the df in the scrolling text, i.e. have it pull up every entry made before removing the csv portions of code
 
 1) create the total point display in the GUI
     -How would a running total work?
@@ -620,7 +474,73 @@ into this
 """
 
 
+"""
+2 things
+
+1) broadcast a "is_timing_a_task": True that way everytime you make an update you can add to your counter 
+2) broadcast the appendix value, this will help you sort the data later
+
+"""
 
 
 
 
+
+"""
+You may want to make this feature in another file first and then test it out
+
+
+current_date = datetime.now()
+
+# Function to update the displayed tasks based on the current_date
+def update_displayed_tasks():
+    formatted_date = current_date.strftime("%Y-%m-%d")  # Format the date as needed
+    # Fetch tasks for `formatted_date` and update the text area
+    # ...
+    return formatted_date
+
+# Function to move the current date forward
+def move_date_forward():
+    global current_date
+    current_date += timedelta(days=1)  # Move the date forward by one day
+    update_displayed_tasks()  # Refresh the displayed tasks
+
+# Function to move the current date backward
+def move_date_backward():
+    global current_date
+    current_date -= timedelta(days=1)  # Move the date back by one day
+    update_displayed_tasks()  # Refresh the displayed tasks
+
+# Button to move the date backward
+prev_date_btn = tk.Button(root, text="<< Previous Day", command=move_date_backward)
+prev_date_btn.grid(row=len(options)+7, column=0, pady=5)
+
+# Button to move the date forward
+next_date_btn = tk.Button(root, text="Next Day >>", command=move_date_forward)
+next_date_btn.grid(row=len(options)+7, column=2, pady=5)
+
+
+def fetch_tasks_and_times():
+    formatted_date = current_date.strftime("%Y%m%d")
+    path = f"/main/Jackson/{formatted_date}/log"
+    ref = db.reference(path)
+    tasks = ref.get()
+
+    if not isinstance(tasks, dict):
+        print(f"Data under '{path}' is not in the expected format or is missing.")
+        return
+
+    # Clear the current content in the text area
+    text_area.delete(1.0, tk.END)
+    
+    # Iterate over the tasks and insert them into the text area
+    for task_id, task_info in tasks.items():
+        if 'task' in task_info and 'time' in task_info:
+            text_area.insert(tk.END, f"{task_info['time']} - {task_info['task']}\n")
+
+
+formatted_date = update_displayed_tasks() # added in post
+
+date_label = tk.Label(root, text=formatted_date)
+date_label.grid(row=len(options)+7, column=1, pady=5)
+"""
