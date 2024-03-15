@@ -337,7 +337,7 @@ def calculate_sum_for_category(user_name, category, date):
     category_values = ref.get()
 
     if not isinstance(category_values, dict):
-        print(f"Data under '{path}' is not in the expected format or is missing.")
+        print(f"Data under '{path}' is not in the expected format or is missing. -calculate_sum_for_category")
         return 0
 
     total_sum = 0
@@ -405,7 +405,9 @@ def fetch_tasks_and_times(user_name, date):
     tasks = ref.get()
 
     if not isinstance(tasks, dict):
-        print(f"Data under '{path}' is not in the expected format or is missing.")
+        print(f"Data under '{path}' is not in the expected format or is missing. -fetch_tasks_and_times")
+        text_area.delete(1.0, tk.END)
+        text_area.insert(tk.END, "DATA MISSING")
         return
 
     # Clear the current content in the text area
