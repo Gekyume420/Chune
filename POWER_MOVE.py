@@ -286,6 +286,7 @@ def create_date_navigator(root):
         nonlocal current_date
         current_date -= timedelta(days=1)
         update_label()
+       # update_gui_with_user_sums(usernames) #< -- added in post, I think this is how you go about implementing it, just need to modify update_gui_with_user_sums
         fetch_tasks_and_times(name_var.get(),format_date(current_date))  # Refresh tasks based on new date
 
     def increment_date():
@@ -320,6 +321,7 @@ names = ['Jackson', 'Nick', 'Kai']
 name_var = tk.StringVar()
 dropdown_name = ttk.Combobox(root, textvariable=name_var, values=names)
 dropdown_name.grid(row=1, column=0, pady=5)
+dropdown_name.set(user_name)
 # Create a button to start recording
 record_btn = tk.Button(root, text="Record Speech", command=main)
 record_btn.grid(row=2, column=0, pady=5, sticky='ew')  # Aligned in the first column
@@ -337,7 +339,7 @@ def calculate_sum_for_category(user_name, category, date):
     category_values = ref.get()
 
     if not isinstance(category_values, dict):
-        print(f"Data under '{path}' is not in the expected format or is missing. -calculate_sum_for_category")
+        # print(f"Data under '{path}' is not in the expected format or is missing. -calculate_sum_for_category") #<-- turn on for debugging
         return 0
 
     total_sum = 0
