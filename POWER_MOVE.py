@@ -127,7 +127,7 @@ def decide_and_calculate_minutes(computer_id1, speech):
 
 def record_speech():
     r = sr.Recognizer()
-    mic = sr.Microphone()
+    mic = sr.Microphone(device_index=2)
     if os.name == 'nt':
         winsound.Beep(1000, 500)
     print("\n\n [ Recording in progress ] \n\n")
@@ -266,12 +266,13 @@ for r in range(16):  # Adjust the range based on your grid
 for i in range(16):  # Adjust the range based on your grid
     root.grid_columnconfigure(i, weight=1)
     root.grid_rowconfigure(i, weight=1)
+"""
 
 # Create scrolled text area for displaying the speech
 text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD)
 text_area.grid(row=0, column=0, columnspan=3, pady=10)  # Spanning across three columns
 
-"""
+
 
 def create_date_navigator(root):
     current_date = datetime.now()
@@ -310,10 +311,10 @@ def create_date_navigator(root):
 current_date, format_date = create_date_navigator(root)
 
 # Dropdown menu options
-options = ['Lab', 'Gym', 'Work', 'Class', 'Tandem', 'Chores', 'None']
+options = ['Lab 4', 'Gym', 'Work', 'Class', 'Tandem', 'Chores', 'None', 'Back-Testing', 'AE 302', 'Discovery']
 tag_var = tk.StringVar()
 dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
-dropdown.grid(row=1, column=0, columnspan=3, pady=5)  # Spanning across three columns
+dropdown.grid(row=1, column=1, pady=5)  # Spanning across three columns
 dropdown.set('Select a tag')
 
 # future reference names = [{user_name}, 'Nick', 'Kai']
@@ -426,8 +427,8 @@ text_area.grid(row=0, column=0, columnspan=3, pady=10, padx=10)
 fetch_tasks_and_times(user_name, format_date(current_date)) # starts the script off by loading your personal shit first
 
  
-
-
+mic_names = sr.Microphone.list_microphone_names()
+print(mic_names)
 ##########################################$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$====================================================================================================
 
 # Configure the column weights to ensure that they expand equally
@@ -440,6 +441,9 @@ root.grid_columnconfigure(2, weight=1)
 root.mainloop()
 
 ################################################################################################################################################################
+
+
+
 
 """
 **** Goal for today ****
