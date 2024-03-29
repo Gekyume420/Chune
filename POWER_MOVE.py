@@ -311,7 +311,7 @@ def create_date_navigator(root):
 current_date, format_date = create_date_navigator(root)
 
 # Dropdown menu options
-options = ['Lab 4', 'Gym', 'Work', 'Class', 'Tandem', 'Chores', 'None', 'Back-Testing', 'AE 302', 'Discovery']
+options = ['Lab 4', 'Gym', 'Work', 'Class', 'Tandem', 'Chores', 'None', 'Back-Testing', 'AE 302', 'Discovery', 'Socializing']
 tag_var = tk.StringVar()
 dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
 dropdown.grid(row=1, column=1, pady=5)  # Spanning across three columns
@@ -349,13 +349,6 @@ def calculate_sum_for_category(user_name, category, date):
             total_sum += value[category]
     return total_sum
 
-# Create a dictionary to hold the IntVars for each category
-category_sums = {category: tk.IntVar(value=0) for category in options}
-
-total_of_totals_var = tk.IntVar(value=0)
-# Function to update all category sums & provides the 'Total:' aka total_of_totals
-
-
 # Create a button to add a reminder
 reminder_btn = tk.Button(root, text="Add Reminder", command=add_reminder_button)
 reminder_btn.grid(row=2, column=2, pady=5, sticky='ew')  # Aligned in the third column
@@ -377,7 +370,6 @@ def update_usernames_dropdown(exclude_name):
     dropdown_name['values'] = usernames  # Update the dropdown list
     return usernames  # Return the list of usernames
 # Call this function with the current username to update the dropdown
-# For example, if the current user is 'Jackson', call it like this:
 
 
 def update_gui_with_user_sums(usernames):
@@ -389,7 +381,8 @@ def update_gui_with_user_sums(usernames):
         total_of_user_totals = 0
         for i, category in enumerate(options):
             sum_for_category = calculate_sum_for_category(user_name, category, format_date(current_date))
-            tk.Label(root, text=f"{category}: {sum_for_category}").grid(row=i+5, column=user_column)
+            if sum_for_category != 0:  # Check if the sum is not zero
+                tk.Label(root, text=f"{category}: {sum_for_category}").grid(row=i+5, column=user_column)
             total_of_user_totals += sum_for_category
         
         # Display total for each user
