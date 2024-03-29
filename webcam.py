@@ -22,7 +22,7 @@ def vid_indexer():
     vid_filename = video_path + "\timelapse_" + todays_date + index + ".avi"
     return index
 
-def record_video(base_path=video_path, width=640, height=480, fps=1200.0):
+def record_video(base_path=video_path, width=640, height=480, fps=900.0):
     # Generate the base filename with today's date
     today = datetime.now().strftime("%Y-%m-%d")
     filename = f"Timelapse_{today}"

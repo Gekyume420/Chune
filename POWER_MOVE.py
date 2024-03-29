@@ -240,7 +240,7 @@ def main():
         update_task_in_database(tag, speech, current_time, context, minutes)
 
     #update_category_sums()
-    update_gui_with_user_sums(usernames)
+    update_gui_with_user_sums(usernames,format_date(current_date))
     fetch_tasks_and_times(user_name, format_date(current_date))
     create_pie_chart(user_name,format_date(current_date))
     print('\n\n', speech, '\n\n')
@@ -248,7 +248,8 @@ def main():
 
 ################################################################################################################################################################
 root = tk.Tk()
-root.title("Tandem 1.0.1 -alpha")
+root.title("Tandem 1.0.2 -alpha")
+# Tandem 1.1.2 is reserved for when this is actually usable by others OR if the code is readable by others
 color_var = tk.IntVar()
 
 
@@ -288,15 +289,20 @@ def create_date_navigator(root):
     def decrement_date():
         nonlocal current_date
         current_date -= timedelta(days=1)
+        
         update_label()
-       # update_gui_with_user_sums(usernames) #< -- added in post, I think this is how you go about implementing it, just need to modify update_gui_with_user_sums
+        update_gui_with_user_sums(usernames,format_date(current_date)) 
         fetch_tasks_and_times(name_var.get(),format_date(current_date))  # Refresh tasks based on new date
+        create_pie_chart(name_var.get(),format_date(current_date))
 
     def increment_date():
         nonlocal current_date
         current_date += timedelta(days=1)
+        
         update_label()
+        update_gui_with_user_sums(usernames,format_date(current_date))
         fetch_tasks_and_times(name_var.get(),format_date(current_date))  # Refresh tasks based on new date
+        create_pie_chart(name_var.get(),format_date(current_date))
 
     # GUI Elements
     left_arrow_button = ttk.Button(root, text="<", command=decrement_date)
@@ -313,7 +319,7 @@ def create_date_navigator(root):
 current_date, format_date = create_date_navigator(root)
 
 # Dropdown menu options
-options = ['Lab 4', 'Gym', 'Work', 'Class', 'Tandem', 'Chores', 'None', 'Back-Testing', 'AE 302', 'Discovery', 'Socializing', 'Trading']
+options = ['Lab 4', 'AE 302', 'Class', 'Work', 'Gym', 'Tandem', 'Chores', 'Back-Testing','Trading',  'Learning', 'Socializing', 'Shitting','Sleep','Showering']
 tag_var = tk.StringVar()
 dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
 dropdown.grid(row=1, column=1, pady=5)  # Spanning across three columns
@@ -333,7 +339,6 @@ record_btn.grid(row=2, column=0, pady=5, sticky='ew')  # Aligned in the first co
 debug_var = tk.IntVar()
 debug_checkbox = tk.Checkbutton(root, text="Debug Mode", variable=debug_var, command=debug)
 debug_checkbox.grid(row=2, column=1, pady=5)  # Aligned in the second column
-
 
 ########################################################--------------------------------------------------------
 
@@ -376,7 +381,7 @@ def calculate_sum_for_category(user_name, category, date):
 
 user_category_sums = {}
 
-def update_gui_with_user_sums(usernames):
+def update_gui_with_user_sums(usernames,date):
     base_column = 3  # Starting column for the first additional user
     
     for user_index, user_name in enumerate(usernames):
@@ -388,7 +393,7 @@ def update_gui_with_user_sums(usernames):
         total_of_user_totals = 0
         
         for i, category in enumerate(options):
-            sum_for_category = calculate_sum_for_category(user_name, category, format_date(current_date))
+            sum_for_category = calculate_sum_for_category(user_name, category, date)
             # Only add to the dictionary if the sum is not zero
             if sum_for_category != 0:
                 user_category_sums[user_name][category] = sum_for_category
@@ -402,7 +407,7 @@ def update_gui_with_user_sums(usernames):
 
 # Assuming 'usernames' is already defined or fetched
 usernames = update_usernames_dropdown(user_name)
-update_gui_with_user_sums(usernames)
+update_gui_with_user_sums(usernames,format_date(current_date))
 
 ##########################################$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$====================================================================================================
 
@@ -435,59 +440,66 @@ debug()
 mic_names = sr.Microphone.list_microphone_names()
 print(mic_names)
 """
- ###### ###### ###### ###### ###### ###### [PIE CHART] ###### ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### ###### ###### ###### ###### ###### ###### ###### ###### ######
-#{category}: {sum_for_category}
-#categories, values = update_gui_with_user_sums(user_name)
+ ###### ###### ###### ###### ###### ######  ###### ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### [PIE CHART] ###### ###### ###### ###### ###### ###### ###### ######
+def create_pie_chart(user_name, date):
+    # Convert input date string to a datetime object for comparison
+    # Assuming 'date' format is 'YYYY-MM-DD', adjust the format as needed
+    input_date = datetime.strptime(date, "%Y-%m-%d")
+    now = datetime.now()
+    current_date = now.date()  # Get current date (without time)
 
-#print(categories)
-#print(values)
-
-
-
-# Calculate the remainder of the total as 'Others'
-def create_pie_chart(user_name,date):
-    # Initialize lists for categories and their values
+    options = ['Lab 4', 'AE 302', 'Class', 'Work', 'Gym', 'Tandem', 'Chores', 'Back-Testing', 'Trading', 'Learning', 'Socializing', 'Shitting', 'Sleep', 'Showering']
     categories = []
     values = []
-    
-    # Assuming 'Others' is not a category in your options list,
-    # and you want to add it to account for unused time
+    color_map = dict(zip(options, ['magenta', 'pink', 'red', 'blue', 'maroon', 'lime', 'tan', 'forestgreen', 'green', 'dodgerblue', 'springgreen', 'saddlebrown', 'darkslategrey','lightblue']))
+
     total = 1440
     used_total = 0
-    
-    # Populate the lists with the user's data
+
     for category, sum_value in user_category_sums[user_name].items():
-        if category != 'Total':  # Exclude the 'Total' entry if present
+        if category != 'Total':
             categories.append(category)
             values.append(sum_value)
             used_total += sum_value
-    
-    # Calculate 'Others' as the unused portion of 'total'
-    others = total - used_total
-    if others > 0:
-        categories.append('Uncategorized')
-        values.append(others)
 
-    # Plotting the pie chart
+    # Calculate 'Remaining' only if the input date is today's date
+    if input_date.date() == current_date:
+        current_time_minutes = now.hour * 60 + now.minute
+        remaining = total - current_time_minutes
+        if remaining > 0:
+            categories.append('Remaining')
+            values.append(remaining)
+            used_total += remaining
+
+    # Calculate 'Uncategorized' based on used total now
+    uncategorized = total - used_total
+    if uncategorized > 0:
+        categories.append('Uncategorized/Idle')
+        values.append(uncategorized)
+
+    category_colors = [color_map.get(category, 'lightgrey') for category in categories if category != 'Remaining']
+    category_colors.extend(['grey', 'silver'])  # Colors for 'Remaining' and 'Uncategorized'
+
     fig = Figure(figsize=(8, 8), dpi=100)
     pie_chart = fig.add_subplot(111)
-    pie_chart.pie(values, labels=categories, autopct='%1.1f%%', startangle=140)
-    pie_chart.set_title(f'Daily Category Breakdown for {user_name} on {date}')
+    wedges, texts, autotexts = pie_chart.pie(values, labels=categories, colors=category_colors, autopct='%1.1f%%', startangle=140)
 
-    # Create a canvas and add the pie chart to the Tkinter window
-    canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
+    # Apply hatch pattern to 'Remaining' slice if present
+    if 'Remaining' in categories:
+        remaining_index = categories.index('Remaining')  # Get the index of 'Remaining' slice
+        #wedges[remaining_index].set_hatch('//')  # Apply hatch pattern
+
+    pie_chart.set_title(f'{date}\n Daily Category Breakdown for {user_name}')
+
+    canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
     canvas.get_tk_widget().grid(row=0, column=7, pady=5, sticky='e')
+
 
 create_pie_chart(user_name,format_date(current_date))
 
 
-"""
---
-
-"""
-
- ###### ###### ###### ###### ###### ###### [^^^^ PIE CHART ^^^^] ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### ###### ###### ###### ###### ###### ###### ###### ###### ######
+ ###### ###### ###### ###### ###### ######  ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### ###### [^^^^ PIE CHART ^^^^] ###### ###### ###### ###### ###### ######
 # Configure the column weights to ensure that they expand equally
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
