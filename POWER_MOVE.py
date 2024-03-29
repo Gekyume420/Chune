@@ -10,7 +10,9 @@ from dotenv import load_dotenv
 import tkinter as tk
 from tkinter import ttk
 from tkinter import scrolledtext
-
+# pip install matplotlib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 todays_date = datetime.now().strftime("%Y-%m-%d")
 
 load_dotenv()
@@ -240,7 +242,7 @@ def main():
     #update_category_sums()
     update_gui_with_user_sums(usernames)
     fetch_tasks_and_times(user_name, format_date(current_date))
-
+    create_pie_chart(user_name,format_date(current_date))
     print('\n\n', speech, '\n\n')
     print(f"Current Time: {current_time}")
 
@@ -311,7 +313,7 @@ def create_date_navigator(root):
 current_date, format_date = create_date_navigator(root)
 
 # Dropdown menu options
-options = ['Lab 4', 'Gym', 'Work', 'Class', 'Tandem', 'Chores', 'None', 'Back-Testing', 'AE 302', 'Discovery', 'Socializing']
+options = ['Lab 4', 'Gym', 'Work', 'Class', 'Tandem', 'Chores', 'None', 'Back-Testing', 'AE 302', 'Discovery', 'Socializing', 'Trading']
 tag_var = tk.StringVar()
 dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
 dropdown.grid(row=1, column=1, pady=5)  # Spanning across three columns
@@ -332,22 +334,8 @@ debug_var = tk.IntVar()
 debug_checkbox = tk.Checkbutton(root, text="Debug Mode", variable=debug_var, command=debug)
 debug_checkbox.grid(row=2, column=1, pady=5)  # Aligned in the second column
 
-debug()
+
 ########################################################--------------------------------------------------------
-def calculate_sum_for_category(user_name, category, date):
-    path = f'/main/{user_name}/{date}/log'  # Dynamic path based on user_name
-    ref = db.reference(path)
-    category_values = ref.get()
-
-    if not isinstance(category_values, dict):
-        # print(f"Data under '{path}' is not in the expected format or is missing. -calculate_sum_for_category") #<-- turn on for debugging
-        return 0
-
-    total_sum = 0
-    for key, value in category_values.items():
-        if isinstance(value, dict) and category in value:
-            total_sum += value[category]
-    return total_sum
 
 # Create a button to add a reminder
 reminder_btn = tk.Button(root, text="Add Reminder", command=add_reminder_button)
@@ -371,22 +359,46 @@ def update_usernames_dropdown(exclude_name):
     return usernames  # Return the list of usernames
 # Call this function with the current username to update the dropdown
 
+def calculate_sum_for_category(user_name, category, date):
+    path = f'/main/{user_name}/{date}/log'  # Dynamic path based on user_name
+    ref = db.reference(path)
+    category_values = ref.get()
+
+    if not isinstance(category_values, dict):
+        # print(f"Data under '{path}' is not in the expected format or is missing. -calculate_sum_for_category") #<-- turn on for debugging
+        return 0
+
+    total_sum = 0
+    for key, value in category_values.items():
+        if isinstance(value, dict) and category in value:
+            total_sum += value[category]
+    return total_sum
+
+user_category_sums = {}
 
 def update_gui_with_user_sums(usernames):
     base_column = 3  # Starting column for the first additional user
+    
     for user_index, user_name in enumerate(usernames):
         user_column = base_column + user_index
         tk.Label(root, text=user_name).grid(row=4, column=user_column)  # User name label
         
+        # Initialize the dictionary for this user with empty dictionary
+        user_category_sums[user_name] = {}
         total_of_user_totals = 0
+        
         for i, category in enumerate(options):
             sum_for_category = calculate_sum_for_category(user_name, category, format_date(current_date))
-            if sum_for_category != 0:  # Check if the sum is not zero
+            # Only add to the dictionary if the sum is not zero
+            if sum_for_category != 0:
+                user_category_sums[user_name][category] = sum_for_category
                 tk.Label(root, text=f"{category}: {sum_for_category}").grid(row=i+5, column=user_column)
             total_of_user_totals += sum_for_category
         
-        # Display total for each user
-        tk.Label(root, text=f"Total: {total_of_user_totals}").grid(row=len(options)+6, column=user_column)
+        # Only add to the dictionary if the user's total is not zero
+        if total_of_user_totals != 0:
+            user_category_sums[user_name]['Total'] = total_of_user_totals
+            tk.Label(root, text=f"Total: {total_of_user_totals}").grid(row=len(options)+6, column=user_column)
 
 # Assuming 'usernames' is already defined or fetched
 usernames = update_usernames_dropdown(user_name)
@@ -418,12 +430,64 @@ text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD)
 text_area.grid(row=0, column=0, columnspan=3, pady=10, padx=10)
 
 fetch_tasks_and_times(user_name, format_date(current_date)) # starts the script off by loading your personal shit first
-
- 
+debug()
+"""
 mic_names = sr.Microphone.list_microphone_names()
 print(mic_names)
-##########################################$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$====================================================================================================
+"""
+ ###### ###### ###### ###### ###### ###### [PIE CHART] ###### ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### ###### ###### ###### ###### ###### ###### ###### ###### ######
+#{category}: {sum_for_category}
+#categories, values = update_gui_with_user_sums(user_name)
 
+#print(categories)
+#print(values)
+
+
+
+# Calculate the remainder of the total as 'Others'
+def create_pie_chart(user_name,date):
+    # Initialize lists for categories and their values
+    categories = []
+    values = []
+    
+    # Assuming 'Others' is not a category in your options list,
+    # and you want to add it to account for unused time
+    total = 1440
+    used_total = 0
+    
+    # Populate the lists with the user's data
+    for category, sum_value in user_category_sums[user_name].items():
+        if category != 'Total':  # Exclude the 'Total' entry if present
+            categories.append(category)
+            values.append(sum_value)
+            used_total += sum_value
+    
+    # Calculate 'Others' as the unused portion of 'total'
+    others = total - used_total
+    if others > 0:
+        categories.append('Uncategorized')
+        values.append(others)
+
+    # Plotting the pie chart
+    fig = Figure(figsize=(8, 8), dpi=100)
+    pie_chart = fig.add_subplot(111)
+    pie_chart.pie(values, labels=categories, autopct='%1.1f%%', startangle=140)
+    pie_chart.set_title(f'Daily Category Breakdown for {user_name} on {date}')
+
+    # Create a canvas and add the pie chart to the Tkinter window
+    canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=0, column=7, pady=5, sticky='e')
+
+create_pie_chart(user_name,format_date(current_date))
+
+
+"""
+--
+
+"""
+
+ ###### ###### ###### ###### ###### ###### [^^^^ PIE CHART ^^^^] ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### ###### ###### ###### ###### ###### ###### ###### ###### ######
 # Configure the column weights to ensure that they expand equally
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
