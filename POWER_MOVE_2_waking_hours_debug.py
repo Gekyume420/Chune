@@ -443,63 +443,55 @@ mic_names = sr.Microphone.list_microphone_names()
 print(mic_names)
 
  ###### ###### ###### ###### ###### ######  ###### ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### [PIE CHART] ###### ###### ###### ###### ###### ###### ###### ######
-def create_pie_chart(user_name, date):
-    # Convert input date string to a datetime object for comparison
-    # Assuming 'date' format is 'YYYY-MM-DD', adjust the format as needed
-    input_date = datetime.strptime(date, "%Y-%m-%d")
+mode = "total"
+def create_pie_chart(root, user_name, date, mode='total'):
     now = datetime.now()
-    current_date = now.date()  # Get current date (without time)
+    if isinstance(date, str):
+        input_date = datetime.strptime(date, "%Y-%m-%d").date()
+    else:
+        input_date = date.date()
 
-    categories = []
-    values = []
+    categories = ['Sample Category']  # Placeholder categories
+    values = [300]  # Placeholder values
+    category_colors = ['blue']  # Placeholder colors
 
-    total = 1440
-    used_total = 0
-
-    for category, sum_value in user_category_sums[user_name].items():
-        if category != 'Total':
-            categories.append(category)
-            values.append(sum_value)
-            used_total += sum_value
-
-    # Calculate 'Remaining' only if the input date is today's date
-    if input_date.date() == current_date:
+    if input_date == now.date() and mode == 'total':
         current_time_minutes = now.hour * 60 + now.minute
-        remaining = total - current_time_minutes
+        remaining = 1440 - current_time_minutes
         if remaining > 0:
             categories.append('Remaining')
             values.append(remaining)
-            used_total += remaining
+            category_colors.append('grey')  # Assuming grey for "Remaining"
+            print("Adding 'Remaining' slice:", remaining, "minutes left today.")
+        else:
+            print("'Remaining' slice not added. No time left today.")
+    else:
+        print("Date is not today or mode is not 'total', not adding 'Remaining' slice.")
 
-    # Calculate 'Uncategorized' based on used total now
-    uncategorized = total - used_total
-    if uncategorized > 0:
-        categories.append('Uncategorized/Idle')
-        values.append(uncategorized)
+    # Assume pie chart creation code follows, using categories, values, and category_colors
 
-    category_colors = [color_map.get(category, 'lightgrey') for category in categories if category != 'Remaining']
-    category_colors.extend(['grey', 'silver'])  # Colors for 'Remaining' and 'Uncategorized'
-
-    fig = Figure(figsize=(8, 8), dpi=100) # what does dpi do?
-    pie_chart = fig.add_subplot(111)
-    wedges, texts, autotexts = pie_chart.pie(values, labels=categories, colors=category_colors, autopct='%1.1f%%', startangle=140)
-
-    # Apply hatch pattern to 'Remaining' slice if present
-    if 'Remaining' in categories:
-        remaining_index = categories.index('Remaining')  # Get the index of 'Remaining' slice
-        #wedges[remaining_index].set_hatch('//')  # Apply hatch pattern
-
-    pie_chart.set_title(f'{date}\n Breakdown for {user_name}\n15 minutes = 1%')
-
-    canvas = FigureCanvasTkAgg(fig, master=root)
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=0, column=7, pady=5, sticky='e')
+# Example call to test the function (adjust as necessary):
+create_pie_chart(root, user_name, datetime.now().strftime("%Y-%m-%d"), 'total')
 
 
-create_pie_chart(user_name,format_date(current_date))
-
+#create_pie_chart(user_name,format_date(current_date))
+#create_pie_chart(root, user_name, format_date(current_date),mode)
 
  ###### ###### ###### ###### ###### ######  ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### ###### [^^^^ PIE CHART ^^^^] ###### ###### ###### ###### ###### ######
+
+ ###### ###### ###### ###### ###### ######  ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### ###### [Toggle mode] ###### ###### ###### ###### ###### ######
+def toggle_mode():
+    global mode
+    mode = "waking_hours" if mode == "total" else "total"
+    # Update the pie chart based on the new mode
+    create_pie_chart(root, user_name, format_date(current_date), mode)
+
+# Add button to toggle mode
+toggle_button = tk.Button(root, text="Toggle Mode", command=toggle_mode)
+toggle_button.grid(row=0, column=8, pady=5, sticky='e')
+
+ ###### ###### ###### ###### ###### ######  ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### ###### [^^^^ toggle mode ^^^^] ###### ###### ###### ###### ###### ######
+
 # Configure the column weights to ensure that they expand equally
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
