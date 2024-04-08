@@ -1,34 +1,20 @@
 import cv2
-
-
 import os
-from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
-load_dotenv()
 
+def record_timelapse(base_path='C:\\Users\\16198\\Documents\\PYTHON\\Timelapse', width=1920, height=1080, fps=30.0):
+    # Time-lapse parameters
+    hours_per_30_seconds_video = 1
+    real_time_seconds_per_hour = 3600
+    desired_video_length_seconds = 12
+    capture_interval = real_time_seconds_per_hour / (desired_video_length_seconds * fps) # Every 4 seconds
 
-
-todays_date = datetime.now().strftime("%Y-%m-%d")
-
-video_path = os.environ['VIDEO_PATH']
-
-#vid_filename = video_path + "\timelapse_" + todays_date + index + ".avi"
-
-def vid_indexer():
-    index = []
-
-    vid_filename = video_path + "\timelapse_" + todays_date + index + ".avi"
-    return index
-
-def record_timelapse(base_path=video_path, width=640, height=480, fps=20.0, capture_interval=1):
     # Generate the base filename with today's date
     today = datetime.now().strftime("%Y-%m-%d")
     filename = f"Timelapse_{today}"
     file_number = 0
     output_file = f"{filename}.avi"
-
-    width, height = 1920, 1080
 
     # Check if the file already exists and update the filename accordingly
     while os.path.exists(os.path.join(base_path, output_file)):
@@ -44,44 +30,32 @@ def record_timelapse(base_path=video_path, width=640, height=480, fps=20.0, capt
     
     # Capture video from the webcam
     cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
     if not cap.isOpened():
         print("Error: Could not open webcam.")
         return
-    
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    
+
     last_frame_time = time.time() - capture_interval
 
     while True:
-        # Capture frame-by-frame
         ret, frame = cap.read()
         if not ret:
-            print("Error: Could not read frame.")
+            print("Failed to grab frame.")
             break
-
-        # Overlay timestamp on every frame for display
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        display_frame = frame.copy()
-        cv2.putText(display_frame, timestamp, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-
-        # Check if it's time to capture the frame for the timelapse
+        
         current_time = time.time()
         if current_time - last_frame_time >= capture_interval:
             last_frame_time = current_time
-
-            # Write the original frame (without the updated timestamp) for consistency in the timelapse
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            cv2.putText(frame, timestamp, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
             out.write(frame)
 
-        # Display the frame with the timestamp
-        cv2.imshow('frame', display_frame)
-
-        # Press 'q' to exit
+        cv2.imshow("Timelapse", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # When everything done, release the capture
     cap.release()
     out.release()
     cv2.destroyAllWindows()

@@ -202,7 +202,7 @@ def write_task(df, filename):
     df.to_csv(filename, index=False)
 def add_reminder(df, speech, current_time):
     global filename2
-    df = add_row(df, {'time': [current_time], 'Reminder': [speech]}) 
+    df = add_row(df, {'time': [current_time], 'To Do List': [speech]}) 
     print(f"\n{speech}\n\nReminder added")
     
     return df
@@ -241,7 +241,7 @@ def main():
 
     #update_category_sums()
     update_gui_with_user_sums(usernames,format_date(current_date))
-    fetch_tasks_and_times(user_name, format_date(current_date))
+    #fetch_tasks_and_times(user_name, format_date(current_date))
     create_pie_chart(user_name,format_date(current_date))
     print('\n\n', speech, '\n\n')
     print(f"Current Time: {current_time}")
@@ -319,8 +319,8 @@ def create_date_navigator(root):
 current_date, format_date = create_date_navigator(root)
 
 # Dropdown menu options
-options = ['Lab 4', 'AE 302', 'Class', 'Work', 'Gym', 'Tandem', 'Socializing', 'Back-Testing','Trading',  'Learning','Eating-Cooking','Showering', 'Chores', 'Shitting','Sleep','Nightly Routine']
-color_map = dict(zip(options, ['magenta', 'pink', 'red', 'blue', 'maroon', 'yellowgreen', 'springgreen', 'forestgreen', 'green', 'dodgerblue','darkorange','lightblue', 'tan', 'saddlebrown', 'darkslategrey','cadetblue']))
+options = ['Lab 4', 'AE 302', 'Class', 'Work', 'Gym', 'Tandem', 'Socializing', 'Back-Testing','Trading',  'Learning','Eating-Cooking','Showering', 'Chores', 'Shitting','Sleep','Nightly Routine','Motion Opposition', 'Planning','DCR']
+color_map = dict(zip(options, ['magenta', 'pink', 'red', 'blue', 'maroon', 'yellowgreen', 'springgreen', 'forestgreen', 'green', 'dodgerblue','darkorange','lightblue', 'tan', 'saddlebrown', 'darkslategrey','cadetblue','lawngreen', 'rosybrown','peru']))
 
 tag_var = tk.StringVar()
 dropdown = ttk.Combobox(root, textvariable=tag_var, values=options)
@@ -500,6 +500,47 @@ create_pie_chart(user_name,format_date(current_date))
 
 
  ###### ###### ###### ###### ###### ######  ###### ###### ###### ###### ###### ###### ###### ###### ###### ############ ###### ###### [^^^^ PIE CHART ^^^^] ###### ###### ###### ###### ###### ######
+monthly = timedelta(days = 30)
+weekly = timedelta(days = 7)
+
+def calculate_lab4_total_time(username, category,period):
+#def calculate_lab4_total_time(username, category):
+    total_minutes_spent = 0  # Accumulate time in minutes
+    end_date = datetime.now()
+    #start_date = end_date - timedelta(days=7)
+    start_date = end_date - period
+    while start_date <= end_date:
+        date_str = start_date.strftime('%Y-%m-%d')
+        path = f'/main/{username}/{date_str}/log'
+        ref = db.reference(path)
+        log_values = ref.get()
+
+        if isinstance(log_values, dict):
+            for key, value in log_values.items():
+                if isinstance(value, dict) and category in value:
+                    total_minutes_spent += value[category]  # Sum in minutes
+
+        start_date += timedelta(days=1)
+    
+    total_hours_spent = total_minutes_spent / 60
+    return round(total_hours_spent, 1)
+
+# Example usage:
+weekly_lab4_time = calculate_lab4_total_time(user_name, 'Lab 4',weekly)
+monthly_lab4_time = calculate_lab4_total_time(user_name, 'Lab 4',monthly)
+print(f"Total time spent on Lab 4 over the last 7 days: {weekly_lab4_time} hours")
+#print(f"Total time spent on Lab 4 over the last 30 days: {monthly_lab4_time} hours")
+
+total_tandem_time = calculate_lab4_total_time(user_name, 'Tandem',weekly)
+monthly_tandem_time = calculate_lab4_total_time(user_name, 'Tandem',monthly)
+#print(f"Total time spent on Tandem over the last 7 days: {total_tandem_time} hours")
+#print(f"Total time spent on Tandem over the last 30 days: {monthly_tandem_time} hours")
+# one course unit is = 3 hours study per week (both in and out of class)
+
+
+
+
+
 # Configure the column weights to ensure that they expand equally
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)

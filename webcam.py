@@ -42,7 +42,8 @@ def record_video(base_path=video_path, width=640, height=480, fps=900.0):
     out = cv2.VideoWriter(full_output_path, fourcc, fps, (width, height))
     
     # Capture video from the webcam
-    cap = cv2.VideoCapture(0)
+    #cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
     if not cap.isOpened():
         print("Error: Could not open webcam.")
